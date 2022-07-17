@@ -328,7 +328,7 @@ ALTER TABLE v_t_accessreport
 	
 	
 ---------------------------------functions-----------------------
-	CREATE FUNCTION fn_checkaccess(_grp varchar, _account varchar)
+CREATE OR REPLACE FUNCTION fn_checkaccess(_grp varchar, _account varchar)
     RETURNS integer
     LANGUAGE 'sql'
     COST 100.0
@@ -337,9 +337,10 @@ AS $BODY$
 
 
 
-SELECT 
-CASE WHEN _account = 'sa' THEN 1 
-CASE WHEN COALESCE((SELECT SUM(A.A)
+SELECT CASE 
+WHEN _account = 'sa' THEN 1 
+WHEN _grp = 'exit' THEN 1 
+WHEN COALESCE((SELECT SUM(A.A)
 FROM
 (
 SELECT 1::integer A, GRP FROM  t_AccessReport  WHERE GRP = _GRP AND ACCOUNT = _Account

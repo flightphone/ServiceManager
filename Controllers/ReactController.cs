@@ -23,7 +23,7 @@ namespace ServiceManager.Controllers
             foreach (string fname in WorkRow.Keys)
             {
                 string pname;
-                string pval = WorkRow[fname].ToString();
+                string pval = (WorkRow[fname]??"").ToString();
                 
 
                 if (string.IsNullOrEmpty(pval))
