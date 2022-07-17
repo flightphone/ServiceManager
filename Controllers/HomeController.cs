@@ -49,7 +49,7 @@ namespace ServiceManager.Controllers
         {
             UserLoginConfirm ul = new UserLoginConfirm();
             ul.UserName = UserName;
-            return View("Login", ul);
+            return View("Confirm", ul);
         }
 
 
@@ -65,7 +65,8 @@ namespace ServiceManager.Controllers
                     if (auth != 1)
                     {
                         ModelState.AddModelError("", "Ошибка доступа");
-                        return View("Login", model);
+                        model.Error = "Ошибка доступа";
+                        return View("Confirm", model);
                     }
                     else
                     {
@@ -76,13 +77,15 @@ namespace ServiceManager.Controllers
                 }
                 else
                 {
-                    return View("Login", model);
+                    model.Error = string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(a => a.ErrorMessage));
+                    return View("Confirm", model);
                 }
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.Message);
-                return View("Login", model);
+                model.Error = ex.Message;
+                return View("Confirm", model);
             }
 
 
@@ -105,7 +108,8 @@ namespace ServiceManager.Controllers
                     if (auth == -1)
                     {
                         ModelState.AddModelError("", "Неправильный логин или пароль");
-                        return View();
+                        model.Error = "Неправильный логин или пароль";
+                        return View("Login", model);
                     }
                     else
                     {
@@ -114,12 +118,14 @@ namespace ServiceManager.Controllers
                 }
                 else
                 {
-                    return View();
+                    model.Error = string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(a => a.ErrorMessage));
+                    return View("Login", model);
                 }
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.Message);
+                model.Error = ex.Message;
                 return View();
             }
 

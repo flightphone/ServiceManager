@@ -1,4 +1,4 @@
-﻿@model ServiceManager.Models.UserLogin
+﻿@model ServiceManager.Models.UserLoginConfirm
 
 @{
     Layout = null;
@@ -206,17 +206,13 @@ footer small {
                 
             </div>
             <!--<form action = "Login" method="POST">-->
-            <form asp-action="Login" asp-controller="Home" method="POST">
+            <form asp-action="Confirm" asp-controller="Home" method="POST">
             <div class="colm-form">
                 <div class="form-container">
-                    <input type="text" placeholder="Логин" name="UserName">
+                    <input type="text" placeholder="Логин" name="UserName" value="@Model.UserName" readonly>
                     <input type="password" placeholder="Пароль" name="Password">
+                    <input type="password" placeholder="Подтвердите пароль" name="ConfirmPassword">
                     <button class="btn-login" type="submit">Войти</button>
-                    
-                    <!--
-					            <a href="#">Forgotten password?</a>
-                      <button class="btn-new">Create new Account</button>
-					          -->
                 </div>
                 
 				          <p>@Model.Error</p>

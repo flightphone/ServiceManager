@@ -1,9 +1,4 @@
-﻿@model ServiceManager.Models.UserLogin
-
-@{
-    Layout = null;
-}
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -199,30 +194,25 @@ footer small {
     <main>
         <div class="row">
             <div class="colm-logo">
-			          <!--
+			<!--
                 <img src="https://static.xx.fbcdn.net/rsrc.php/y8/r/dF5SId3UHWd.svg" alt="Logo">
-			            -->	
+			-->	
                 <h2>Рабочее место оператора управления сервисом</h2>
-                
             </div>
-            <!--<form action = "Login" method="POST">-->
-            <form asp-action="Login" asp-controller="Home" method="POST">
             <div class="colm-form">
                 <div class="form-container">
-                    <input type="text" placeholder="Логин" name="UserName">
-                    <input type="password" placeholder="Пароль" name="Password">
-                    <button class="btn-login" type="submit">Войти</button>
-                    
+                    <input type="text" placeholder="Логин">
+                    <input type="password" placeholder="Пароль">
+                    <button class="btn-login">Войти</button>
                     <!--
-					            <a href="#">Forgotten password?</a>
-                      <button class="btn-new">Create new Account</button>
-					          -->
+					<a href="#">Forgotten password?</a>
+                    <button class="btn-new">Create new Account</button>
+					-->
                 </div>
-                
-				          <p>@Model.Error</p>
-				        
+                <!--
+				<p><a href="#"><b>Create a Page</b></a> for a celebrity, brand or business.</p>
+				-->
             </div>
-            </form>
         </div>
     </main>
     
