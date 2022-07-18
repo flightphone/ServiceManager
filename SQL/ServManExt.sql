@@ -132,7 +132,7 @@ _name varchar (100)
 		_name := '';
 	end if;   
    insert into querys(
-        name
+        "name"
         ,userid 
         ,command 
         ,dbconnectorname 
