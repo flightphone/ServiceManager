@@ -411,20 +411,34 @@ namespace WpfBu.Models
                     idata = idata.Where(d => ((d[f.FieldName] ?? "").ToString().ToLowerInvariant().IndexOf(f.FindString.ToLowerInvariant()) > -1));
             }
 
-            /*
-            List<string> ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f => f.FieldName).ToList();
-            idata = idata.OrderBy(d => (
-                string.Join("@", ords.Select(f => d[f]))
-                ));
-            */
             var ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder);
+            bool fisort = true;
+
             foreach (var f in ords)
             {
                 if (f.Sort == "ASC")
-                    idata = idata.OrderBy(d => (d[f.FieldName]));
+                {
+                    if (fisort)
+                    {
+                        idata = idata.OrderBy(d => (d[f.FieldName]));
+                        fisort = false;
+                    }
+                    else
+                        idata = ((IOrderedEnumerable<Dictionary<string, object>>)idata).ThenBy(d => (d[f.FieldName]));
+                }
+
 
                 if (f.Sort == "DESC")
-                    idata = idata.OrderByDescending(d => (d[f.FieldName]));
+                {
+                    if (fisort)
+                    {
+                        idata = idata.OrderByDescending(d => (d[f.FieldName]));
+                        fisort = false;
+                    }
+                    else
+                        idata = ((IOrderedEnumerable<Dictionary<string, object>>)idata).ThenByDescending(d => (d[f.FieldName]));
+                }
+
             }
             return idata;
         }
@@ -445,7 +459,7 @@ namespace WpfBu.Models
             idata = FilterExternal(idata);
             if (pagination)
             {
-                
+
                 int total = idata.Count();
 
                 MaxPage = total / nrows;
