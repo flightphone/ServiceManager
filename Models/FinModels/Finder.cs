@@ -80,7 +80,7 @@ namespace WpfBu.Models
     public class Finder : RootForm
     {
 
-
+        private string tag = "__all__";
         #region prop
 
         public string IdDeclare { get; set; }
@@ -156,7 +156,7 @@ namespace WpfBu.Models
             sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' || d.decname = p.paramname where iddeclare = ";
 
             sql = sql + o.ToString();
-            MainObj.Dbutil = new DBUtil();
+            //MainObj.Dbutil = new DBUtil();
             DataTable t_rp = MainObj.Dbutil.Runsql(sql);
             DataRow rd = t_rp.Rows[0];
             string paramvalue = rd["paramvalue"].ToString();
@@ -177,6 +177,10 @@ namespace WpfBu.Models
 
             KeyF = rd["keyfield"].ToString();
             DispField = rd["dispfield"].ToString();
+            //19.07.2022
+            if (string.IsNullOrEmpty(DispField))
+                DispField = tag;
+
             KeyValue = rd["keyvalue"].ToString();
             SaveFieldList = rd["savefieldlist"].ToString();
 
@@ -238,6 +242,9 @@ namespace WpfBu.Models
 
         public void CreateColumns(string s)
         {
+            //19.07.2022
+            if (string.IsNullOrEmpty(s))
+                return;
             MaxSortOrder = 0;
             Fcols = new List<FinderField>();
             if (string.IsNullOrEmpty(s))
@@ -283,14 +290,75 @@ namespace WpfBu.Models
                     }
                 }
             }
+        }
+        public void CreateColumns(Dictionary<string, object> row)
+        {
+            //создаем колонки из первой строки, если не заданы в настройках 19.07.2022
+            Fcols = new List<FinderField>();
+            foreach (string c in row.Keys)
+            {
+                Fcols.Add(new FinderField()
+                {
+                    FieldName = c,
+                    FieldCaption = c,
+                    Width = 100,
+                    DisplayFormat = "",
+                    Visible = true,
+                    Sort = "Нет"
+                });
+            }
 
 
+            //доп. колонка для поиска по всем колонкам
+
+            Fcols.Add(new FinderField()
+            {
+                FieldName = tag,
+                FieldCaption = "*",
+                Width = 100,
+                DisplayFormat = "",
+                Visible = false,
+                Sort = "Нет"
+            });
 
 
         }
 
+        public DataTable UpdateCSVExternal()
+        {
+            //внешний источник данных 20.07.2022
+
+            ExternalAdapter ea = new ExternalAdapter();
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams);
+
+            if (data.Count > 0 && Fcols == null)
+            {
+                CreateColumns(data[0]);
+            }
+
+
+            IEnumerable<Dictionary<string, object>> idata = (IEnumerable<Dictionary<string, object>>)data;
+            idata = FilterExternal(idata);
+            data = idata.ToList();
+            DataTable res = new DataTable();
+            var cols = Fcols.Where(f => f.Visible).Select(f => new DataColumn(f.FieldName, typeof(System.String))).ToArray();
+            res.Columns.AddRange(cols);
+            foreach (var d in data)
+            {
+                DataRow rw = res.NewRow();
+                for (int i = 0; i < res.Columns.Count; i++)
+                    rw[res.Columns[i].ColumnName] = d[res.Columns[i].ColumnName];
+                res.Rows.Add(rw);
+            }
+            return res;
+        }
         public DataTable UpdateCSV()
         {
+            //внешний источник данных 20.07.2022
+            if (SQLText.IndexOf("__external__") > -1)
+            {
+                return UpdateCSVExternal();
+            }
             string PrepareSQL = SQLText;
             PrepareSQL = PrepareSQL.Replace("[Account]", Account);
             if (TextParams != null)
@@ -328,9 +396,88 @@ namespace WpfBu.Models
             return data;
         }
 
+        public IEnumerable<Dictionary<string, object>> FilterExternal(IEnumerable<Dictionary<string, object>> idata)
+        {
+            //фильтровка сортировка на клиенте 20.07.2022
+            if (Fcols == null)
+                return idata;
+
+            var fls = Fcols.Where(f => !string.IsNullOrEmpty(f.FindString));
+            foreach (var f in fls)
+            {
+                if (f.FieldName == tag)
+                    idata = idata.Where(d => (string.Join("#", d.Values).ToLowerInvariant().IndexOf(f.FindString.ToLowerInvariant()) > -1));
+                else
+                    idata = idata.Where(d => ((d[f.FieldName] ?? "").ToString().ToLowerInvariant().IndexOf(f.FindString.ToLowerInvariant()) > -1));
+            }
+
+            /*
+            List<string> ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f => f.FieldName).ToList();
+            idata = idata.OrderBy(d => (
+                string.Join("@", ords.Select(f => d[f]))
+                ));
+            */
+            var ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder);
+            foreach (var f in ords)
+            {
+                if (f.Sort == "ASC")
+                    idata = idata.OrderBy(d => (d[f.FieldName]));
+
+                if (f.Sort == "DESC")
+                    idata = idata.OrderByDescending(d => (d[f.FieldName]));
+            }
+            return idata;
+        }
+        public virtual void UpdateTabExternal()
+        {
+            //внешний источник данных 20.07.2022
+            ExternalAdapter ea = new ExternalAdapter();
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams);
+            if (data.Count > 0)
+            {
+                ColumnTab = new List<string>();
+                ColumnTab.AddRange(data[0].Keys);
+                if (Fcols == null)
+                    CreateColumns(data[0]);
+            }
+
+            IEnumerable<Dictionary<string, object>> idata = (IEnumerable<Dictionary<string, object>>)data;
+            idata = FilterExternal(idata);
+            if (pagination)
+            {
+                
+                int total = idata.Count();
+
+                MaxPage = total / nrows;
+
+                if ((total % nrows) != 0)
+                    MaxPage += 1;
+                if (page > MaxPage)
+                    _page = (int)MaxPage;
+
+                if (_page == 0)
+                    _page = 1;
+
+                TotalTab = new List<Dictionary<string, object>> { new Dictionary<string, object> { { "n_total", total } } };
+                idata = idata.Skip((page - 1) * nrows).Take(nrows);
+            }
+            else
+            {
+                MaxPage = 1;
+                _page = 1;
+            }
+            MainTab = idata.ToList();
+        }
 
         public virtual void UpdateTab()
         {
+            //внешний источник данных 20.07.2022
+            if (SQLText.IndexOf("__external__") > -1)
+            {
+                UpdateTabExternal();
+                return;
+            }
+
             DataTable TTable = null;
             DataTable data = null;
 
@@ -429,12 +576,18 @@ namespace WpfBu.Models
 
             MainTab = MainObj.Dbutil.DataToJson(data);
             ColumnTab = MainObj.Dbutil.DataColumn(data);
+            //если колонки не указаны, создаем автоматически
+            if (Fcols == null && MainTab.Count > 0)
+                CreateColumns(MainTab[0]);
         }
         #endregion
         public void CompilerFilterOrder()
         {
+            //19.07.2022
+            if (Fcols == null)
+                return;
 
-            var fls = Fcols.Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
+            var fls = Fcols.Where(f => f.Visible).Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
             {
                 string s = "";
                 if (f.FindString[0] == '!')
@@ -444,7 +597,7 @@ namespace WpfBu.Models
                 return s;
             });
 
-            var ords = Fcols.Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f =>
+            var ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f =>
             {
                 string s = "";
                 if (f.Sort == "ASC")
@@ -477,7 +630,7 @@ namespace WpfBu.Models
 
         private string rwCSV(DataRow rw, char r)
         {
-            return string.Join(r, Fcols.Select(f =>
+            return string.Join(r, Fcols.Where(f => f.Visible).Select(f =>
             {
                 return @"""" + rw[f.FieldName].ToString().Replace(@"""", @"""""") + @"""";
             }));
@@ -487,7 +640,7 @@ namespace WpfBu.Models
         {
 
             StringBuilder Res = new StringBuilder();
-            var cols = Fcols.Select(f =>
+            var cols = Fcols.Where(f => f.Visible).Select(f =>
             {
                 return @"""" + f.FieldCaption.ToString().Replace(@"""", @"""""") + @"""";
             });

@@ -21,6 +21,7 @@ namespace ServiceManager
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            MainObj.Dbutil = new DBUtil();
             MainObj.ConnectionString = Configuration["ConnectionString"];
         }
 
