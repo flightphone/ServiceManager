@@ -22,7 +22,9 @@ namespace ServiceManager
         {
             Configuration = configuration;
             MainObj.Dbutil = new DBUtil();
+            MainObj.api = Configuration["api"];
             MainObj.ConnectionString = Configuration["ConnectionString"];
+            
         }
 
         public IConfiguration Configuration { get; }

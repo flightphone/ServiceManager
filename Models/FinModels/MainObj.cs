@@ -4,6 +4,7 @@ using System.Data;
 using Npgsql;
 using System.Linq;
 
+
 namespace WpfBu.Models
 {
 
@@ -46,7 +47,23 @@ namespace WpfBu.Models
             return 1;
         }
 
+        public static bool CheckAccess(string grp, string Account)    
+        {
+            string sql = "select fn_checkaccess(@grp, @Account)";
+            NpgsqlDataAdapter da = new NpgsqlDataAdapter(sql, ConnectionString);
+            da.SelectCommand.Parameters.AddWithValue("@grp", grp);
+            da.SelectCommand.Parameters.AddWithValue("@Account", Account);
+            DataTable res = new DataTable();
+            da.Fill(res);
+            int r = (int)res.Rows[0][0];
+            return (r > 0);
+
+        }
         public static bool IsPostgres = true;
+
+        public static string api {get; set;}
+        
+        
     }
 
     public class treeItem

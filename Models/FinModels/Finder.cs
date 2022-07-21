@@ -329,7 +329,7 @@ namespace WpfBu.Models
             //внешний источник данных 20.07.2022
 
             ExternalAdapter ea = new ExternalAdapter();
-            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams);
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, this.Account);
 
             if (data.Count > 0 && Fcols == null)
             {
@@ -446,13 +446,19 @@ namespace WpfBu.Models
         {
             //внешний источник данных 20.07.2022
             ExternalAdapter ea = new ExternalAdapter();
-            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams);
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, Account);
             if (data.Count > 0)
             {
                 ColumnTab = new List<string>();
                 ColumnTab.AddRange(data[0].Keys);
                 if (Fcols == null)
                     CreateColumns(data[0]);
+            }
+
+            if (data.Count == 0 && Fcols!= null)
+            {
+                ColumnTab = new List<string>();
+                ColumnTab.AddRange(Fcols.Select(f => f.FieldName));
             }
 
             IEnumerable<Dictionary<string, object>> idata = (IEnumerable<Dictionary<string, object>>)data;

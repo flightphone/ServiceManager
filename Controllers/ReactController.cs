@@ -6,25 +6,58 @@ using System.Collections.Generic;
 using System.Text;
 using System.Data;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authorization;
 using Npgsql;
 
 namespace ServiceManager.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class ReactController : Controller
     {
 
         public JsonResult exec(string EditProc, string SQLParams, string KeyF)
         {
             Dictionary<string, object> WorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(SQLParams);
+            string message = "OK";
+            ExternalAdapter ea = new ExternalAdapter();
+            if (ea.procedures.Contains(EditProc))
+            {
+                //перехватываем внешние процедуры
+                try
+                {
+                    
+                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow);
+                    List<string> ColumnTab = new List<string>(); 
+                    ColumnTab.AddRange(MainTab.Keys);
+                    return Json(new
+                    {
+                        message = message,
+                        MainTab = new List<Dictionary<string, object>>(){MainTab},
+                        ColumnTab = ColumnTab
+                    });
+                }
+                catch (Exception ex)
+                {
+                    message = ex.Message;
+                    return Json(new
+                    {
+                        message = message
+                    });
+                }
+
+            }
+
+
+
+
             var vals = new List<string>();
             var Param = new Dictionary<string, object>();
             Regex re = new Regex(@"[-+]?[0-9]*[\.,][0-9]*");
             foreach (string fname in WorkRow.Keys)
             {
                 string pname;
-                string pval = (WorkRow[fname]??"").ToString();
-                
+                string pval = (WorkRow[fname] ?? "").ToString();
+
 
                 if (string.IsNullOrEmpty(pval))
                     pname = "null";
@@ -45,7 +78,7 @@ namespace ServiceManager.Controllers
             sql = $"select * from {EditProc}({sqlpar})";
 
             DataTable data;
-            string message = "OK";
+            
             try
             {
                 data = MainObj.Dbutil.Runsql(sql, Param);
