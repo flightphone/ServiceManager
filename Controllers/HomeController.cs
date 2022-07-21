@@ -29,11 +29,15 @@ namespace ServiceManager.Controllers
         [Authorize]
         public IActionResult Index(string id)
         {
+            /*
             if (string.IsNullOrEmpty(id))
             {
                id = MainObj.CheckAccess("Administrators",User.Identity.Name)?"97":"98";
             }
             return Redirect("~/index.html#" + id);
+            */
+            return View();
+            
         }
 
 
