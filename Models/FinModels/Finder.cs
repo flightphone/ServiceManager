@@ -329,7 +329,7 @@ namespace WpfBu.Models
             //внешний источник данных 20.07.2022
 
             ExternalAdapter ea = new ExternalAdapter();
-            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, this.Account);
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, this.Account, this.DecName);
 
             if (data.Count > 0 && Fcols == null)
             {
@@ -446,7 +446,7 @@ namespace WpfBu.Models
         {
             //внешний источник данных 20.07.2022
             ExternalAdapter ea = new ExternalAdapter();
-            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, Account);
+            List<Dictionary<string, object>> data = ea.GetData(IdDeclare, TextParams, Account, DecName);
             if (data.Count > 0)
             {
                 ColumnTab = new List<string>();

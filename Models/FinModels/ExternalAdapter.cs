@@ -22,7 +22,7 @@ namespace WpfBu.Models
 
     public interface IExternalAdapter
     {
-        public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account);
+        public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account, string DecName);
         public List<string> procedures { get; set; }
 
         public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow);
@@ -61,7 +61,7 @@ namespace WpfBu.Models
         }
 
 
-        public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account)
+        public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account, string DecName)
         {
             if (IdDeclare == "151")
                 return Test(IdDeclare, TextParams);
@@ -85,8 +85,9 @@ namespace WpfBu.Models
                 return GetUserQueryInfo(Account);
             }
 
-            List<Dictionary<string, object>> res = new List<Dictionary<string, object>>() { new Dictionary<string, object>() { { "error", "Не определен источник данных" } } };
-            return res;
+            return GetDataNci(DecName);
+            //List<Dictionary<string, object>> res = new List<Dictionary<string, object>>() { new Dictionary<string, object>() { { "error", "Не определен источник данных" } } };
+            //return res;
         }
 
         public List<Dictionary<string, object>> GetAllConnectorsInfo()
