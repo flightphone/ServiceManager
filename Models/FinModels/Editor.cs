@@ -1,9 +1,85 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace WpfBu.Models
 {
+    public class ColumnsAdapter
+    {
+        private string parseTrue (string v)
+        {
+            return (v == "True"? "1": "0");
+        }
+        public List<FinderField> Fcols { get; set; }
+
+        public void Save(string IdDeclare)
+        {
+            string sql = $"select * from t_columns where iddeclare = {IdDeclare} order by ordc";
+            DataTable dt = MainObj.Dbutil.Runsql(sql);
+            List<Dictionary<string, object>> data = MainObj.Dbutil.DataToJson(dt);
+
+            sql = $"select 'GridFind' || decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
+            dt = MainObj.Dbutil.Runsql(sql);
+            string paramname = dt.Rows[0][0].ToString();
+            string grid = @"<GRID FROZENCOLS=""0"" SumFields = """" LabelField = """" LabelText = """">" + '\n';
+            grid = grid + string.Join('\n', data.Select( d => 
+            $"<COLUMN FieldName=\"{(d["fieldname"]??"").ToString()}\"" +
+            $" FieldCaption=\"{(d["fieldcaption"]??"").ToString()}\"" +
+            $" DisplayFormat=\"{(d["displayformat"]??"").ToString()}\"" +
+            $" Width=\"{(d["width"]??"").ToString()}\"" +
+            $" Visible=\"{parseTrue((d["visible"]??"").ToString())}\"" +
+            " group = \"\" Sum = \"0\"  ColSort=\"1\" />"
+            )) + "<SAFEDEF SAFEDEF=\"1\"/></GRID>";
+            
+            //throw new Exception(grid);
+
+            sql = "select p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            param.Add("@paramname", paramname);
+            param.Add("@paramvalue", grid);
+            param.Add("@paramdescription", paramname);
+            MainObj.Dbutil.ExecSQL(sql, param);
+
+        }
+        public void Update(string IdDeclare, string User)
+        {
+            var F = new Finder();
+            F.Account = User;
+            if (string.IsNullOrEmpty(F.Account))
+                F.Account = "sa";
+            F.nrows = 30;
+            F.Mode = "data";
+            F.AutoCreateColumns = false;
+            F.start(IdDeclare);
+            Fcols = F.Fcols;
+            if (Fcols == null)
+                Fcols = new List<FinderField>();
+
+            List<string> ColumnTab = F.ColumnTab;
+            var addField = ColumnTab.Except(Fcols.Select(f => f.FieldName))
+            .Select(c => new FinderField()
+            {
+                FieldName = c,
+                FieldCaption = c,
+                Width = 100,
+                DisplayFormat = "",
+                Visible = true,
+                Sort = "Нет"
+            });
+            string sql = $"delete from t_columns where iddeclare = {IdDeclare}; ";
+            Fcols.AddRange(addField);
+            int ordc = 0;
+            sql = sql + string.Join("; ", Fcols.Select(f =>
+            {
+                ordc++;
+                return $"insert into t_columns (iddeclare,ordc,visible,fieldname,fieldcaption,displayformat,width) " +
+                  $"values ({IdDeclare},{ordc},{f.Visible},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
+            }));
+            MainObj.Dbutil.ExecSQL(sql, null);
+
+        }
+    }
     public class Editor : RootForm
     {
         private Finder ReferFinder { get; set; }
@@ -79,8 +155,8 @@ namespace WpfBu.Models
                         FieldCaption = ReferFinder.Fcols[i].FieldCaption,
                         FieldName = ReferFinder.Fcols[i].FieldName,
                         DisplayFormat = ReferFinder.Fcols[i].DisplayFormat,
-                            //FieldEditor = fe,
-                            joinRow = jr
+                        //FieldEditor = fe,
+                        joinRow = jr
                     }
                     );
 

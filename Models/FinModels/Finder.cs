@@ -5,7 +5,22 @@ using System.Data;
 using System.Xml;
 using System.Linq;
 
+/*
+Новые конструкции
+17.09.2020  
+Если в t_rpDeclare заполнено поле DispParamName , то по IdDeclare = DispParamName
+создается новый Finder и присваивается полю Setting . По полям первой строки таблицы
+Setting.MainTab заполняются параметры @ в запросе исходного Finder. Для возможности
+изменить параметры Setting.EditProc!='', Setting.SaveFieldList!='' . 
+Для Setting  можно заполнять таблицу t_sysFieldMap
 
+25.09.2020
+В Finder's редактора передаются TextParams основного Finder
+
+22.07.2022
+Добавлена возможность получения и редактирования данных из внешних источников
+ExternalAdapter
+*/
 
 namespace WpfBu.Models
 {
@@ -81,6 +96,7 @@ namespace WpfBu.Models
     {
 
         private string tag = "__all__";
+        private bool external = false;
         #region prop
 
         public string IdDeclare { get; set; }
@@ -113,6 +129,7 @@ namespace WpfBu.Models
 
         public int MaxSortOrder { get; set; }
 
+        public bool AutoCreateColumns = true;
         public List<FinderField> Fcols { get; set; }
         public Dictionary<string, string> TextParams { get; set; }
 
@@ -162,6 +179,8 @@ namespace WpfBu.Models
             string paramvalue = rd["paramvalue"].ToString();
             if (string.IsNullOrEmpty(SQLText))
                 SQLText = rd["decsql"].ToString();
+
+            external = (SQLText.IndexOf("__external__") > -1);    
             DecName = rd["decname"].ToString();
             Descr = rd["descr"].ToString();
             text = Descr;
@@ -267,14 +286,14 @@ namespace WpfBu.Models
                 if (xCol.Name == "COLUMN")
                 {
                     string FName = xCol.Attributes["FieldName"].Value;
-
-                    FName = FName.ToLower();
+                    if (!external)
+                        FName = FName.ToLower();
                     string Title = xCol.Attributes["FieldCaption"].Value;
                     int Width = 0;
                     int.TryParse(xCol.Attributes["Width"].Value, out Width);
                     bool Vis = (xCol.Attributes["Visible"].Value == "1");
                     string DispFormat = xCol.Attributes["DisplayFormat"].Value;
-                    if (Vis)
+                    if (Vis || !AutoCreateColumns)
                     {
                         Fcols.Add(new FinderField()
                         {
@@ -293,6 +312,8 @@ namespace WpfBu.Models
         }
         public void CreateColumns(Dictionary<string, object> row)
         {
+            if (!AutoCreateColumns)
+                return;
             //создаем колонки из первой строки, если не заданы в настройках 19.07.2022
             Fcols = new List<FinderField>();
             foreach (string c in row.Keys)
@@ -341,7 +362,7 @@ namespace WpfBu.Models
             idata = FilterExternal(idata);
             data = idata.ToList();
             DataTable res = new DataTable();
-            var cols = Fcols.Where(f => f.Visible).Select(f => new DataColumn(f.FieldName, typeof(System.String))).ToArray();
+            var cols = Fcols.Where(f => f.FieldName != tag).Select(f => new DataColumn(f.FieldName, typeof(System.String))).ToArray();
             res.Columns.AddRange(cols);
             foreach (var d in data)
             {
@@ -355,7 +376,7 @@ namespace WpfBu.Models
         public DataTable UpdateCSV()
         {
             //внешний источник данных 20.07.2022
-            if (SQLText.IndexOf("__external__") > -1)
+            if (external)
             {
                 return UpdateCSVExternal();
             }
@@ -411,7 +432,7 @@ namespace WpfBu.Models
                     idata = idata.Where(d => ((d[f.FieldName] ?? "").ToString().ToLowerInvariant().IndexOf(f.FindString.ToLowerInvariant()) > -1));
             }
 
-            var ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder);
+            var ords = Fcols.Where(f => f.FieldName != tag).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder);
             bool fisort = true;
 
             foreach (var f in ords)
@@ -492,7 +513,7 @@ namespace WpfBu.Models
         public virtual void UpdateTab()
         {
             //внешний источник данных 20.07.2022
-            if (SQLText.IndexOf("__external__") > -1)
+            if (external)
             {
                 UpdateTabExternal();
                 return;
@@ -607,7 +628,7 @@ namespace WpfBu.Models
             if (Fcols == null)
                 return;
 
-            var fls = Fcols.Where(f => f.Visible).Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
+            var fls = Fcols.Where(f => f.FieldName != tag).Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
             {
                 string s = "";
                 if (f.FindString[0] == '!')
@@ -617,7 +638,7 @@ namespace WpfBu.Models
                 return s;
             });
 
-            var ords = Fcols.Where(f => f.Visible).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f =>
+            var ords = Fcols.Where(f => f.FieldName != tag).Where(f => f.SortOrder > 0 && f.Sort != "Нет").OrderBy(f => f.SortOrder).Select(f =>
             {
                 string s = "";
                 if (f.Sort == "ASC")
@@ -650,7 +671,7 @@ namespace WpfBu.Models
 
         private string rwCSV(DataRow rw, char r)
         {
-            return string.Join(r, Fcols.Where(f => f.Visible).Select(f =>
+            return string.Join(r, Fcols.Where(f => f.FieldName != tag).Select(f =>
             {
                 return @"""" + rw[f.FieldName].ToString().Replace(@"""", @"""""") + @"""";
             }));
@@ -660,7 +681,7 @@ namespace WpfBu.Models
         {
 
             StringBuilder Res = new StringBuilder();
-            var cols = Fcols.Where(f => f.Visible).Select(f =>
+            var cols = Fcols.Where(f => f.FieldName != tag).Select(f =>
             {
                 return @"""" + f.FieldCaption.ToString().Replace(@"""", @"""""") + @"""";
             });

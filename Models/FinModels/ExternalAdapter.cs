@@ -35,6 +35,7 @@ namespace WpfBu.Models
 
         public ExternalAdapter()
         {
+            
             procedures = new List<string>(){
                 "p_connectors_edit",
                 "p_connectors_del",

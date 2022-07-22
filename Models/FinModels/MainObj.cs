@@ -47,7 +47,7 @@ namespace WpfBu.Models
             return 1;
         }
 
-        public static bool CheckAccess(string grp, string Account)    
+        public static bool CheckAccess(string grp, string Account)
         {
             string sql = "select fn_checkaccess(@grp, @Account)";
             NpgsqlDataAdapter da = new NpgsqlDataAdapter(sql, ConnectionString);
@@ -61,9 +61,9 @@ namespace WpfBu.Models
         }
         public static bool IsPostgres = true;
 
-        public static string api {get; set;}
-        
-        
+        public static string api { get; set; }
+
+
     }
 
     public class treeItem
@@ -179,7 +179,10 @@ namespace WpfBu.Models
             var cmd = new NpgsqlCommand(sql, cn);
             if (par != null)
                 foreach (string s in par.Keys)
-                    cmd.Parameters.AddWithValue(s, par[s]);
+                    if (par[s] == null)
+                        cmd.Parameters.AddWithValue(s, DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue(s, par[s]);
             cn.Open();
             cmd.ExecuteNonQuery();
             cn.Close();

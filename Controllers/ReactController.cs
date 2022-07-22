@@ -14,7 +14,34 @@ namespace ServiceManager.Controllers
     [Authorize]
     public class ReactController : Controller
     {
+        public JsonResult SaveColumn(string id)
+        {
+            try
+            {
+                ColumnsAdapter C = new ColumnsAdapter();
+                C.Save(id);
+                return Json(new { Error = "Колонки таблицы сохранены." });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            } 
+        }
+        public JsonResult UpdateColumn(string id)
+        {
+            
+            try
+            {
+                ColumnsAdapter C = new ColumnsAdapter();
+                C.Update(id, User.Identity.Name);
+                return Json(new { Error = "Колонки таблиц загружены." });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            } 
 
+        }
         public JsonResult exec(string EditProc, string SQLParams, string KeyF)
         {
             Dictionary<string, object> WorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(SQLParams);
