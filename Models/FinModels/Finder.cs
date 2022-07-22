@@ -180,7 +180,7 @@ namespace WpfBu.Models
             if (string.IsNullOrEmpty(SQLText))
                 SQLText = rd["decsql"].ToString();
 
-            external = (SQLText.IndexOf("__external__") > -1);    
+            external = (SQLText.IndexOf("__external__") > -1);
             DecName = rd["decname"].ToString();
             Descr = rd["descr"].ToString();
             text = Descr;
@@ -286,8 +286,7 @@ namespace WpfBu.Models
                 if (xCol.Name == "COLUMN")
                 {
                     string FName = xCol.Attributes["FieldName"].Value;
-                    if (!external)
-                        FName = FName.ToLower();
+                    //if (!external) FName = FName.ToLower();
                     string Title = xCol.Attributes["FieldCaption"].Value;
                     int Width = 0;
                     int.TryParse(xCol.Attributes["Width"].Value, out Width);
@@ -476,7 +475,7 @@ namespace WpfBu.Models
                     CreateColumns(data[0]);
             }
 
-            if (data.Count == 0 && Fcols!= null)
+            if (data.Count == 0 && Fcols != null)
             {
                 ColumnTab = new List<string>();
                 ColumnTab.AddRange(Fcols.Select(f => f.FieldName));
