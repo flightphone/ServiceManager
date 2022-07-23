@@ -162,3 +162,58 @@ $$ language plpgsql;
 
 
 --name,userid,command,dbconnectorname
+
+
+CREATE OR REPLACE FUNCTION p_rpdeclare2_edit(_iddeclare integer, _decname varchar, _descr varchar, _dectype integer, _keyfield varchar, _dispfield varchar)
+    RETURNS SETOF t_rpdeclare 
+    LANGUAGE 'plpgsql'
+    COST 100.0
+    VOLATILE     ROWS 1000.0
+AS $BODY$
+DECLARE 
+    _decsql varchar;
+BEGIN
+
+_decsql := '__external__';
+IF EXISTS (SELECT idDeclare FROM t_rpdeclare  WHERE iddeclare = _iddeclare) THEN
+UPDATE t_rpdeclare SET
+	decName = _decname,
+	descr = _descr,
+	decType = _decType,
+	decsql = _decsql,
+	keyfield = _keyfield,
+	dispfield = _dispfield
+WHERE iddeclare = _iddeclare;
+
+ELSE
+
+IF (COALESCE(_iddeclare, 0) =0) THEN
+   SELECT  MAX (iddeclare) + 1 FROM t_rpdeclare INTO _iddeclare;
+END IF;
+INSERT INTO t_rpdeclare
+(
+	iddeclare,
+	decname,
+	descr,
+	dectype,
+	decsql,
+	keyfield,
+	dispfield
+)
+VALUES
+(
+	_iddeclare,
+	_decname,
+	_descr,
+	_dectype,
+	_decsql,
+	_keyfield,
+	_dispfield
+);
+END IF;
+
+return query select * from t_rpDeclare  WHERE iddeclare = _iddeclare;
+END;
+$BODY$;
+
+--iddeclare,decname,descr,dectype,keyfield,dispfield
