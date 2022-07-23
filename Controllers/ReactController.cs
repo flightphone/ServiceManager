@@ -14,6 +14,20 @@ namespace ServiceManager.Controllers
     [Authorize]
     public class ReactController : Controller
     {
+        public JsonResult ClearColumn(string id)
+        {
+            try
+            {
+                ColumnsAdapter C = new ColumnsAdapter();
+                C.Clear(id);
+                return Json(new { Error = "Колонки таблицы удалены" });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            } 
+        }
+
         public JsonResult SaveColumn(string id)
         {
             try

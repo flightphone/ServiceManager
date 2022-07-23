@@ -9,9 +9,28 @@ namespace WpfBu.Models
     {
         private string parseTrue (string v)
         {
-            return (v == "True"? "1": "0");
+            return ((v == "True" || v == "1")? "1": "0");
         }
         public List<FinderField> Fcols { get; set; }
+
+        public void Clear(string IdDeclare)
+        {
+            string sql = $"delete from t_columns where iddeclare = {IdDeclare}";
+            MainObj.Dbutil.ExecSQL(sql, null);
+            
+
+            sql = $"select 'GridFind' || decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
+            DataTable dt = MainObj.Dbutil.Runsql(sql);
+            string paramname = dt.Rows[0][0].ToString();
+            string grid = "";
+
+            sql = "select p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            param.Add("@paramname", paramname);
+            param.Add("@paramvalue", grid);
+            param.Add("@paramdescription", paramname);
+            MainObj.Dbutil.ExecSQL(sql, param);
+        }    
 
         public void Save(string IdDeclare)
         {
@@ -74,7 +93,7 @@ namespace WpfBu.Models
             {
                 ordc++;
                 return $"insert into t_columns (iddeclare,ordc,visible,fieldname,fieldcaption,displayformat,width) " +
-                  $"values ({IdDeclare},{ordc},{f.Visible},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
+                  $"values ({IdDeclare},{ordc},{(f.Visible ? 1:0)},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
             }));
             MainObj.Dbutil.ExecSQL(sql, null);
 

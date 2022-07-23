@@ -2,7 +2,7 @@ create table t_columns (
     idcolumn serial not null,
     iddeclare integer not null,
     ordc integer,
-    visible BOOLEAN,
+    visible integer,
     fieldname varchar(255),
     fieldcaption varchar(255),
     displayformat varchar(255),
@@ -15,7 +15,7 @@ create function p_t_columns_edit
 _idcolumn int4
 ,_iddeclare int4 DEFAULT null
 ,_ordc int4 DEFAULT null
-,_visible bool DEFAULT null
+,_visible integer DEFAULT null
 ,_fieldname varchar (255) DEFAULT null
 ,_fieldcaption varchar (255) DEFAULT null
 ,_displayformat varchar (255) DEFAULT null
@@ -83,4 +83,4 @@ $$ language plpgsql;
 
 --idcolumn,iddeclare,ordc,visible,fieldname,fieldcaption,displayformat,width
 
-select * from airlines1
+

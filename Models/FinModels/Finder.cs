@@ -197,6 +197,7 @@ namespace WpfBu.Models
             KeyF = rd["keyfield"].ToString();
             DispField = rd["dispfield"].ToString();
             //19.07.2022
+            
             if (string.IsNullOrEmpty(DispField))
                 DispField = tag;
 

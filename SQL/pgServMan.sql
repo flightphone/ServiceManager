@@ -1100,7 +1100,7 @@ CREATE FUNCTION p_t_usergroup_del(_groupname varchar)
 AS $BODY$
 
 begin
-   delete from t_usergroup where groupname = _groupname;
+   delete from t_usergroup where groupname = _groupname and groupname <> 'Administrators';
 end;
 
 $BODY$;
