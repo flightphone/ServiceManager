@@ -107,8 +107,10 @@ namespace WpfBu.Models
                         treeItem ilist = new treeItem(ItemCaption);
                         ilist.id = (k == bi.Length - 1) ? mi["idmenu"].ToString() : mi["idmenu"].ToString() + "_node";
                         ilist.attributes = new Dictionary<string, string>() { { "link1", mi["link1"].ToString() }, { "params", mi["params"].ToString() } };
+                        /*
                         if ((int)mi["idimage"] > 0)
                             ilist.iconCls = "tree-" + mi["idimage"].ToString();
+                        */    
 
                         if (Mn.children == null)
                         { Mn.children = new List<object>(); }

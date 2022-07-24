@@ -8,10 +8,11 @@ using System.Data;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Npgsql;
+using System.Linq;
 
 namespace ServiceManager.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ReactController : Controller
     {
         public JsonResult ClearColumn(string id)
@@ -259,6 +260,44 @@ namespace ServiceManager.Controllers
 
         }
 
+        public JsonResult Banner()
+        {
+            try
+            {
+                string account = User.Identity.Name;
+                if (string.IsNullOrEmpty(account))
+                    account = "sa";
+                
+                var data = new DataTable();
+                var cnstr = MainObj.ConnectionString;
+                var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
+                var da = new NpgsqlDataAdapter(sql, cnstr);
+                da.SelectCommand.Parameters.AddWithValue("@Account", account);
+                da.Fill(data);
+                List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
+                int n = Math.Min(8, data.Rows.Count);
+                for (int i = 0; i < n; i++)
+                {
+                    Dictionary<string, string> r = new Dictionary<string, string>() {
+                        {"id", data.Rows[i]["idmenu"].ToString()},
+                        {"iddeclare", data.Rows[i]["params"].ToString()},
+                        {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
+                    };
+                    res.Add(r);
+                }
+                for (int i = n; i < 8; i++)
+                {
+                    Dictionary<string, string> r = new Dictionary<string, string>(res[i-n]);
+                    res.Add(r);
+                }
+                return Json (new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList()});
+            }
+            catch (Exception e)
+            {
+                return Json(new object[] { new { text = e.Message } });
+            }    
+
+        }
 
         [Route("ustore/gettree")]
         public JsonResult gettree()
@@ -272,7 +311,7 @@ namespace ServiceManager.Controllers
 
                 var data = new DataTable();
                 var cnstr = MainObj.ConnectionString;
-                var sql = "select a.* , fn_getmenuimageid(a.caption) idimage from fn_mainmenu('ALL', @Account) a order by a.ordmenu, idmenu";
+                var sql = "select a.* from fn_mainmenu('ALL', @Account) a order by a.ordmenu, idmenu";
 
                 var da = new NpgsqlDataAdapter(sql, cnstr);
                 da.SelectCommand.Parameters.AddWithValue("@Account", account);
