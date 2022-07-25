@@ -628,7 +628,6 @@ CREATE FUNCTION p_rpdeclare_edit(_iddeclare integer, _decname varchar, _descr va
     COST 100.0
     VOLATILE     ROWS 1000.0
 AS $BODY$
-
 BEGIN
 IF EXISTS (SELECT IdDeclare FROM t_rpDeclare  WHERE IdDeclare = _IdDeclare) THEN
 UPDATE t_rpDeclare SET
@@ -710,6 +709,8 @@ $BODY$;
 
 ALTER FUNCTION p_rpdeclare_edit(_iddeclare integer, _decname varchar, _descr varchar, _dectype integer, _decsql varchar, _keyfield varchar, _dispfield varchar, _keyvalue varchar, _dispvalue varchar, _keyparamname varchar, _dispparamname varchar, _isbasename integer, _descript varchar, _addkeys varchar, _tablename varchar, _editproc varchar, _delproc varchar, _image_bmp varchar, _savefieldlist varchar)
     OWNER TO postgres;
+
+
 CREATE FUNCTION p_sysaccesuser(_grp varchar, _account varchar, _action integer)
     RETURNS void
     LANGUAGE 'sql'
