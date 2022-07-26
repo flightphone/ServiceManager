@@ -7,9 +7,9 @@ namespace WpfBu.Models
 {
     public class ColumnsAdapter
     {
-        private string parseTrue (string v)
+        private string parseTrue(string v)
         {
-            return ((v == "True" || v == "1")? "1": "0");
+            return ((v == "True" || v == "1") ? "1" : "0");
         }
         public List<FinderField> Fcols { get; set; }
 
@@ -17,20 +17,26 @@ namespace WpfBu.Models
         {
             string sql = $"delete from t_columns where iddeclare = {IdDeclare}";
             MainObj.Dbutil.ExecSQL(sql, null);
-            
+
 
             sql = $"select 'GridFind' || decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
+            if (MainObj.Driver == "MSSQL")
+                sql = $"select 'GridFind' + decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
+
             DataTable dt = MainObj.Dbutil.Runsql(sql);
             string paramname = dt.Rows[0][0].ToString();
             string grid = "";
 
             sql = "select p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
+            if (MainObj.Driver == "MSSQL")
+                sql = "exec p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
+
             Dictionary<string, object> param = new Dictionary<string, object>();
             param.Add("@paramname", paramname);
             param.Add("@paramvalue", grid);
             param.Add("@paramdescription", paramname);
             MainObj.Dbutil.ExecSQL(sql, param);
-        }    
+        }
 
         public void Save(string IdDeclare)
         {
@@ -42,18 +48,20 @@ namespace WpfBu.Models
             dt = MainObj.Dbutil.Runsql(sql);
             string paramname = dt.Rows[0][0].ToString();
             string grid = @"<GRID FROZENCOLS=""0"" SumFields = """" LabelField = """" LabelText = """">" + '\n';
-            grid = grid + string.Join('\n', data.Select( d => 
-            $"<COLUMN FieldName=\"{(d["fieldname"]??"").ToString()}\"" +
-            $" FieldCaption=\"{(d["fieldcaption"]??"").ToString()}\"" +
-            $" DisplayFormat=\"{(d["displayformat"]??"").ToString()}\"" +
-            $" Width=\"{(d["width"]??"").ToString()}\"" +
-            $" Visible=\"{parseTrue((d["visible"]??"").ToString())}\"" +
+            grid = grid + string.Join('\n', data.Select(d =>
+            $"<COLUMN FieldName=\"{(d["fieldname"] ?? "").ToString()}\"" +
+            $" FieldCaption=\"{(d["fieldcaption"] ?? "").ToString()}\"" +
+            $" DisplayFormat=\"{(d["displayformat"] ?? "").ToString()}\"" +
+            $" Width=\"{(d["width"] ?? "").ToString()}\"" +
+            $" Visible=\"{parseTrue((d["visible"] ?? "").ToString())}\"" +
             " group = \"\" Sum = \"0\"  ColSort=\"1\" />"
             )) + "<SAFEDEF SAFEDEF=\"1\"/></GRID>";
-            
+
             //throw new Exception(grid);
 
             sql = "select p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
+            if (MainObj.Driver == "MSSQL")
+                sql = "exec p_lbrsetparam(@paramname, @paramvalue, @paramdescription)";
             Dictionary<string, object> param = new Dictionary<string, object>();
             param.Add("@paramname", paramname);
             param.Add("@paramvalue", grid);
@@ -93,7 +101,7 @@ namespace WpfBu.Models
             {
                 ordc++;
                 return $"insert into t_columns (iddeclare,ordc,visible,fieldname,fieldcaption,displayformat,width) " +
-                  $"values ({IdDeclare},{ordc},{(f.Visible ? 1:0)},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
+                  $"values ({IdDeclare},{ordc},{(f.Visible ? 1 : 0)},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
             }));
             MainObj.Dbutil.ExecSQL(sql, null);
 

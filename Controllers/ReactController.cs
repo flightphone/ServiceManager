@@ -57,7 +57,7 @@ namespace ServiceManager.Controllers
             }
 
         }
-        public JsonResult exec(string EditProc, string SQLParams, string KeyF)
+        public JsonResult exec(string EditProc, string SQLParams, string KeyF, string IdDeclare, string mode)
         {
             Dictionary<string, object> WorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(SQLParams);
             string message = "OK";
@@ -90,9 +90,21 @@ namespace ServiceManager.Controllers
             }
 
 
-
+            //26.07.2022  проверяем строку коннекта
             string Driver = MainObj.Driver;
             string ConnectionString = MainObj.ConnectionString;
+            if (!string.IsNullOrEmpty(IdDeclare))
+            {
+                string dsql = "select * from t_rpdeclare where iddeclare = @IdDeclare";
+                var t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+                string dcs = t_rp.Rows[0]["descript"].ToString();
+                if (!string.IsNullOrEmpty(dcs))
+                {
+                    var d = dcs.Split('@');
+                    Driver = d[0];
+                    ConnectionString = d[1];
+                }
+            }
 
             var vals = new List<string>();
             var Param = new Dictionary<string, object>();
@@ -304,20 +316,20 @@ namespace ServiceManager.Controllers
                 if (string.IsNullOrEmpty(account))
                     account = "sa";
 
-                
+
                 var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
-                DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@Account", account}});
-                
+                DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
+
                 List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
                 int n = Math.Min(8, data.Rows.Count);
                 for (int i = 0; i < n; i++)
                 {
-                        Dictionary<string, string> r = new Dictionary<string, string>() {
+                    Dictionary<string, string> r = new Dictionary<string, string>() {
                             {"id", data.Rows[i]["idmenu"].ToString()},
                             {"iddeclare", data.Rows[i]["params"].ToString()},
                             {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
                         };
-                        res.Add(r);
+                    res.Add(r);
                 }
                 for (int i = n; i < 8; i++)
                 {
@@ -344,7 +356,7 @@ namespace ServiceManager.Controllers
                 var tu = new treeutil();
 
                 string sql = "select a.* from fn_mainmenu('ALL', @Account) a order by a.ordmenu, idmenu";
-                
+
 
                 DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
                 var rootItem = new treeItem("root");

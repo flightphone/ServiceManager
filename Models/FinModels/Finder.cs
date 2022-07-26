@@ -19,7 +19,7 @@ Setting.MainTab заполняются параметры @ в запросе и
 
 22.07.2022
 Добавлена возможность получения и редактирования данных из внешних источников
-ExternalAdapter
+логика в классе ExternalAdapter
 
 Редактор колонок для PGSQL
 
@@ -27,6 +27,7 @@ ExternalAdapter
 Поддержка подключений из других баз. В поле Descritpt Driver@ConnectString
 Пример:  MSSQL@data source=51.250.44.37;User ID=sa;Password=aA12345678$;database=test
 Пока только два драйвера MSSQL и PGSQL
+Только для чтения
 
 Для PGSQL ignore case поиск
 */
