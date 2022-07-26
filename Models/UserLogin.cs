@@ -34,4 +34,6 @@ namespace ServiceManager.Models
         public string ConfirmPassword { get; set; }
 
     }
+
+    
 }

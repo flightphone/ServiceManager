@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using Npgsql;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Data.SqlClient;
 
 
 namespace WpfBu.Models
@@ -10,6 +13,7 @@ namespace WpfBu.Models
 
     public class MainObj
     {
+        public static string Driver { get; set; }
         public static string ConnectionString { get; set; }
         public static DBUtil Dbutil { get; set; }
 
@@ -19,12 +23,11 @@ namespace WpfBu.Models
             if (account == "sa" && password == "aA12345678")
                 return 1;
             var sqlcheck = "select username, pass from t_ntusers where username = @account and (pass = @password or pass = '-') and username <> 'sa'";
-            var res = new DataTable();
+            var res = Dbutil.Runsql(sqlcheck, new Dictionary<string, object>(){
+                {"@account", account},
+                {"@password", password}
+            });
 
-            var da = new NpgsqlDataAdapter(sqlcheck, ConnectionString);
-            da.SelectCommand.Parameters.AddWithValue("@account", account);
-            da.SelectCommand.Parameters.AddWithValue("@password", password);
-            da.Fill(res);
             if (res.Rows.Count == 0)
                 return -1;
             if (res.Rows[0]["pass"].ToString() == "-")
@@ -32,13 +35,11 @@ namespace WpfBu.Models
                 if (update)
                 {
                     string sql = "update t_ntusers set pass = @password  where username = @account and pass = '-'";
-                    NpgsqlConnection cn = new NpgsqlConnection(ConnectionString);
-                    NpgsqlCommand cmd = new NpgsqlCommand(sql, cn);
-                    cmd.Parameters.AddWithValue("@account", account);
-                    cmd.Parameters.AddWithValue("@password", password);
-                    cn.Open();
-                    cmd.ExecuteNonQuery();
-                    cn.Close();
+                    Dbutil.ExecSQL(sql, new Dictionary<string, object>(){
+                        {"@account", account},
+                        {"@password", password}
+                    });
+
                     return 1;
                 }
 
@@ -50,16 +51,20 @@ namespace WpfBu.Models
         public static bool CheckAccess(string grp, string Account)
         {
             string sql = "select fn_checkaccess(@grp, @Account)";
-            NpgsqlDataAdapter da = new NpgsqlDataAdapter(sql, ConnectionString);
-            da.SelectCommand.Parameters.AddWithValue("@grp", grp);
-            da.SelectCommand.Parameters.AddWithValue("@Account", Account);
-            DataTable res = new DataTable();
-            da.Fill(res);
+            if (MainObj.Driver == "MSSQL")
+                sql = "select dbo.fn_checkaccess(@grp, @Account)";
+
+
+            DataTable res = Dbutil.Runsql(sql, new Dictionary<string, object>(){
+                {"@grp", Account},
+                {"@account", Account}
+
+            });
             int r = (int)res.Rows[0][0];
             return (r > 0);
 
         }
-        public static bool IsPostgres = true;
+      
 
         public static string api { get; set; }
 
@@ -86,8 +91,6 @@ namespace WpfBu.Models
 
     public class treeutil
     {
-
-
         public void CreateItems(string Root, treeItem Mn, DataTable Tab)
         {
 
@@ -110,7 +113,7 @@ namespace WpfBu.Models
                         /*
                         if ((int)mi["idimage"] > 0)
                             ilist.iconCls = "tree-" + mi["idimage"].ToString();
-                        */    
+                        */
 
                         if (Mn.children == null)
                         { Mn.children = new List<object>(); }
@@ -152,42 +155,97 @@ namespace WpfBu.Models
             }
             return rows;
         }
-        public DataTable Runsql(string sql)
+        public DataTable Runsql(string sql, string Driver = "", string ConnectionString = "")
         {
+            if (String.IsNullOrEmpty(Driver))
+                Driver = MainObj.Driver;
+            if (String.IsNullOrEmpty(ConnectionString))
+                ConnectionString = MainObj.ConnectionString;
             DataTable data = new DataTable();
-            var da = new NpgsqlDataAdapter(sql, MainObj.ConnectionString);
-            da.Fill(data);
+            if (Driver == "PGSQL")
+            {
+                var da = new NpgsqlDataAdapter(sql, ConnectionString);
+                da.Fill(data);
+            }
+            else
+            {
+                var da = new SqlDataAdapter(sql, ConnectionString);
+                da.Fill(data);
+            }
             return data;
         }
 
-        public DataTable Runsql(string sql, Dictionary<string, object> par)
+        public DataTable Runsql(string sql, Dictionary<string, object> par, string Driver = "", string ConnectionString = "")
         {
-
+            if (String.IsNullOrEmpty(Driver))
+                Driver = MainObj.Driver;
+            if (String.IsNullOrEmpty(ConnectionString))
+                ConnectionString = MainObj.ConnectionString;
             DataTable data = new DataTable();
+            if (Driver == "PGSQL")
+            {
+                var da = new NpgsqlDataAdapter(sql, ConnectionString);
+                if (par != null)
+                    foreach (string s in par.Keys)
+                        if (par[s] == null)
+                            da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
+                        else
+                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                da.Fill(data);
+            }
+            else
+            {
+                var da = new SqlDataAdapter(sql, ConnectionString);
+                if (par != null)
+                    foreach (string s in par.Keys)
+                        if (par[s] == null)
+                            da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
+                        else
+                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                da.Fill(data);
+            }
 
-            var da = new NpgsqlDataAdapter(sql, MainObj.ConnectionString);
-            if (par != null)
-                foreach (string s in par.Keys)
-                    da.SelectCommand.Parameters.AddWithValue(s, par[s]);
-            da.Fill(data);
+
 
             return data;
         }
 
-        public void ExecSQL(string sql, Dictionary<string, object> par)
+        public void ExecSQL(string sql, Dictionary<string, object> par, string Driver = "", string ConnectionString = "")
         {
+            if (String.IsNullOrEmpty(Driver))
+                Driver = MainObj.Driver;
+            if (String.IsNullOrEmpty(ConnectionString))
+                ConnectionString = MainObj.ConnectionString;
 
-            var cn = new NpgsqlConnection(MainObj.ConnectionString);
-            var cmd = new NpgsqlCommand(sql, cn);
-            if (par != null)
-                foreach (string s in par.Keys)
-                    if (par[s] == null)
-                        cmd.Parameters.AddWithValue(s, DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue(s, par[s]);
-            cn.Open();
-            cmd.ExecuteNonQuery();
-            cn.Close();
+            if (Driver == "PGSQL")
+            {
+                var cn = new NpgsqlConnection(MainObj.ConnectionString);
+                var cmd = new NpgsqlCommand(sql, cn);
+                if (par != null)
+                    foreach (string s in par.Keys)
+                        if (par[s] == null)
+                            cmd.Parameters.AddWithValue(s, DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue(s, par[s]);
+                cn.Open();
+                cmd.ExecuteNonQuery();
+                cn.Close();
+            }
+            else
+            {
+                var cn = new SqlConnection(MainObj.ConnectionString);
+                var cmd = new SqlCommand(sql, cn);
+                if (par != null)
+                    foreach (string s in par.Keys)
+                        if (par[s] == null)
+                            cmd.Parameters.AddWithValue(s, DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue(s, par[s]);
+                cn.Open();
+                cmd.ExecuteNonQuery();
+                cn.Close();
+
+            }
 
         }
         public object NewID(string tablename)
@@ -212,6 +270,29 @@ namespace WpfBu.Models
             sql = "select " + c_default + " id";
             var result = Runsql(sql);
             return result.Rows[0]["id"];
+        }
+    }
+
+    public class DumpServ
+    {
+        //public string sql {get; set;}
+
+        public string getTableName(string txt)
+        {
+            Regex rg = new Regex(@"\[(.*?)\]");
+            var regs = rg.Match(txt);
+            var TableName = regs.Groups[1].Value;
+            return TableName;
+        }
+
+
+        public string CreateDumpSQL(string sql)
+        {
+            StringBuilder resSQL = new StringBuilder();
+            string[] sqls = sql.Split(";", StringSplitOptions.RemoveEmptyEntries);
+            foreach (var s in sqls)
+                resSQL.Append(getTableName(s) + "\n");
+            return resSQL.ToString();
         }
     }
 }

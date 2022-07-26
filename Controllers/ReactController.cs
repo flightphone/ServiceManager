@@ -26,7 +26,7 @@ namespace ServiceManager.Controllers
             catch (Exception e)
             {
                 return Json(new { Error = $"Ошибка: {e.Message}" });
-            } 
+            }
         }
 
         public JsonResult SaveColumn(string id)
@@ -40,11 +40,11 @@ namespace ServiceManager.Controllers
             catch (Exception e)
             {
                 return Json(new { Error = $"Ошибка: {e.Message}" });
-            } 
+            }
         }
         public JsonResult UpdateColumn(string id)
         {
-            
+
             try
             {
                 ColumnsAdapter C = new ColumnsAdapter();
@@ -54,7 +54,7 @@ namespace ServiceManager.Controllers
             catch (Exception e)
             {
                 return Json(new { Error = $"Ошибка: {e.Message}" });
-            } 
+            }
 
         }
         public JsonResult exec(string EditProc, string SQLParams, string KeyF)
@@ -67,14 +67,14 @@ namespace ServiceManager.Controllers
                 //перехватываем внешние процедуры
                 try
                 {
-                    
+
                     Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow);
-                    List<string> ColumnTab = new List<string>(); 
+                    List<string> ColumnTab = new List<string>();
                     ColumnTab.AddRange(MainTab.Keys);
                     return Json(new
                     {
                         message = message,
-                        MainTab = new List<Dictionary<string, object>>(){MainTab},
+                        MainTab = new List<Dictionary<string, object>>() { MainTab },
                         ColumnTab = ColumnTab
                     });
                 }
@@ -91,6 +91,8 @@ namespace ServiceManager.Controllers
 
 
 
+            string Driver = MainObj.Driver;
+            string ConnectionString = MainObj.ConnectionString;
 
             var vals = new List<string>();
             var Param = new Dictionary<string, object>();
@@ -99,31 +101,65 @@ namespace ServiceManager.Controllers
             {
                 string pname;
                 string pval = (WorkRow[fname] ?? "").ToString();
+                DateTime dval;
+                Double duval;
 
-
-                if (string.IsNullOrEmpty(pval))
-                    pname = "null";
+                if (Driver == "PGSQL")
+                {
+                    if (string.IsNullOrEmpty(pval))
+                        pname = "null";
+                    else
+                    {
+                        pname = $"'{pval.Replace("'", "''")}'";
+                    }
+                }
                 else
                 {
-                    pname = $"'{pval.Replace("'", "''")}'";
+                    pname = "@_" + fname;
+                    if (re.IsMatch(pval) && Double.TryParse(pval.Replace(".", ","), out duval))
+                    {
+                        Param.Add(pname, duval);
+                    }
+                    else
+                    if (DateTime.TryParse(pval, out dval))
+                    {
+                        Param.Add(pname, dval);
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(WorkRow[fname].ToString()))
+                        {
+                            Param.Add(pname, DBNull.Value);
+                        }
+                        else
+                        {
+                            Param.Add(pname, WorkRow[fname]);
+                        }
+                    }
                 }
 
                 string val = "";
-
-                val = $"_{fname} => {pname}";
-
+                if (Driver == "PGSQL")
+                    val = $"_{fname} => {pname}";
+                else
+                    val = $"@{fname} = {pname}";
                 vals.Add(val);
             }
             string sqlpar = string.Join(",", vals);
             string sql = "";
 
-            sql = $"select * from {EditProc}({sqlpar})";
+            if (Driver == "PGSQL")
+                sql = $"select * from {EditProc}({sqlpar})";
+            else
+                sql = $"exec {EditProc} {sqlpar}";
+
+
 
             DataTable data;
-            
+
             try
             {
-                data = MainObj.Dbutil.Runsql(sql, Param);
+                data = MainObj.Dbutil.Runsql(sql, Param, Driver, ConnectionString);
                 List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
                 List<string> ColumnTab = MainObj.Dbutil.DataColumn(data);
                 return Json(new
@@ -267,35 +303,33 @@ namespace ServiceManager.Controllers
                 string account = User.Identity.Name;
                 if (string.IsNullOrEmpty(account))
                     account = "sa";
+
                 
-                var data = new DataTable();
-                var cnstr = MainObj.ConnectionString;
                 var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
-                var da = new NpgsqlDataAdapter(sql, cnstr);
-                da.SelectCommand.Parameters.AddWithValue("@Account", account);
-                da.Fill(data);
+                DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@Account", account}});
+                
                 List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
                 int n = Math.Min(8, data.Rows.Count);
                 for (int i = 0; i < n; i++)
                 {
-                    Dictionary<string, string> r = new Dictionary<string, string>() {
-                        {"id", data.Rows[i]["idmenu"].ToString()},
-                        {"iddeclare", data.Rows[i]["params"].ToString()},
-                        {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
-                    };
-                    res.Add(r);
+                        Dictionary<string, string> r = new Dictionary<string, string>() {
+                            {"id", data.Rows[i]["idmenu"].ToString()},
+                            {"iddeclare", data.Rows[i]["params"].ToString()},
+                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
+                        };
+                        res.Add(r);
                 }
                 for (int i = n; i < 8; i++)
                 {
-                    Dictionary<string, string> r = new Dictionary<string, string>(res[i-n]);
+                    Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
                     res.Add(r);
                 }
-                return Json (new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList()});
+                return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList() });
             }
             catch (Exception e)
             {
                 return Json(new object[] { new { text = e.Message } });
-            }    
+            }
 
         }
 
@@ -309,14 +343,10 @@ namespace ServiceManager.Controllers
                     account = "sa";
                 var tu = new treeutil();
 
-                var data = new DataTable();
-                var cnstr = MainObj.ConnectionString;
-                var sql = "select a.* from fn_mainmenu('ALL', @Account) a order by a.ordmenu, idmenu";
+                string sql = "select a.* from fn_mainmenu('ALL', @Account) a order by a.ordmenu, idmenu";
+                
 
-                var da = new NpgsqlDataAdapter(sql, cnstr);
-                da.SelectCommand.Parameters.AddWithValue("@Account", account);
-                da.Fill(data);
-
+                DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
                 var rootItem = new treeItem("root");
                 rootItem.children = new List<object>();
 
@@ -333,7 +363,8 @@ namespace ServiceManager.Controllers
         [Route("/pg/getid/{table_name}")]
         public JsonResult getid(string table_name)
         {
-
+            return Json(new { id = "" });
+            /*
             var sql = "select column_default, udt_name  from information_schema.columns  where table_name = @table_name and ordinal_position = 1";
             var cnstr = MainObj.ConnectionString;
             var da = new NpgsqlDataAdapter(sql, cnstr);
@@ -357,6 +388,7 @@ namespace ServiceManager.Controllers
             var result = new DataTable();
             da.Fill(result);
             return Json(new { id = result.Rows[0]["id"] });
+            */
 
         }
     }

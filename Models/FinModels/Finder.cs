@@ -20,6 +20,15 @@ Setting.MainTab заполняются параметры @ в запросе и
 22.07.2022
 Добавлена возможность получения и редактирования данных из внешних источников
 ExternalAdapter
+
+Редактор колонок для PGSQL
+
+26.07.2022
+Поддержка подключений из других баз. В поле Descritpt Driver@ConnectString
+Пример:  MSSQL@data source=51.250.44.37;User ID=sa;Password=aA12345678$;database=test
+Пока только два драйвера MSSQL и PGSQL
+
+Для PGSQL ignore case поиск
 */
 
 namespace WpfBu.Models
@@ -71,8 +80,6 @@ namespace WpfBu.Models
                 }
                 else
                     SortOrder = null;
-                //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Sort)));
-                //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SortOrder)));
             }
         }
         public int? SortOrder
@@ -97,6 +104,9 @@ namespace WpfBu.Models
 
         private string tag = "__all__";
         private bool external = false;
+
+        private string Driver;
+        private string ConnectionString;
         #region prop
 
         public string IdDeclare { get; set; }
@@ -170,8 +180,11 @@ namespace WpfBu.Models
             IdDeclare = o.ToString();
             string sql;
 
-            sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' || d.decname = p.paramname where iddeclare = ";
-
+            
+            if (MainObj.Driver == "PGSQL")
+                sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' || d.decname = p.paramname where iddeclare = ";
+            else
+                sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' + d.decname = p.paramname where iddeclare = ";
             sql = sql + o.ToString();
             //MainObj.Dbutil = new DBUtil();
             DataTable t_rp = MainObj.Dbutil.Runsql(sql);
@@ -180,7 +193,20 @@ namespace WpfBu.Models
             if (string.IsNullOrEmpty(SQLText))
                 SQLText = rd["decsql"].ToString();
 
+            //ConnectionString может быть разная у разных IdDeclare 26/07/2022
+            Driver = MainObj.Driver;
+            ConnectionString = MainObj.ConnectionString;
+
+            string dcs = rd["descript"].ToString();
+            if (!string.IsNullOrEmpty(dcs))
+            {
+                var d = dcs.Split('@');
+                Driver = d[0];
+                ConnectionString = d[1];
+            }
+
             external = (SQLText.IndexOf("__external__") > -1);
+            
             DecName = rd["decname"].ToString();
             Descr = rd["descr"].ToString();
             text = Descr;
@@ -581,11 +607,12 @@ namespace WpfBu.Models
 
             if (pagination)
             {
-                TTable = MainObj.Dbutil.Runsql(sqltotal, SQLParams);
+                TTable = MainObj.Dbutil.Runsql(sqltotal, SQLParams, Driver, ConnectionString);
                 Int64 total = 0;
-
-                total = (Int64)TTable.Rows[0]["n_total"];
-
+                if (Driver == "PGSQL")
+                    total = (Int64)TTable.Rows[0]["n_total"];
+                else
+                    total = (Int32)TTable.Rows[0]["n_total"];
                 MaxPage = total / nrows;
 
                 if ((total % nrows) != 0)
@@ -606,13 +633,28 @@ namespace WpfBu.Models
             }
 
 
-            sql = sql + " limit " + nrows.ToString() + " offset " + ((page - 1) * nrows).ToString();
+            
+            if (Driver!="MSSQL")
+                sql = sql + " limit " + nrows.ToString() + " offset " + ((page - 1) * nrows).ToString();
+            else
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("WITH tmpWebFind AS (");
+                sb.AppendLine(" SELECT TMPA.*, ");
+                sb.AppendLine(string.Format(" ROW_NUMBER() OVER (ORDER BY {0}) AS IDTMPNUM", OrdField));
+                sb.AppendLine(string.Format(" FROM ({0}) TMPA ", sqlpag));
+                sb.AppendLine(") ");
+                sb.AppendLine(" SELECT * FROM tmpWebFind A ");
+                sb.AppendLine(string.Format(" WHERE IDTMPNUM BETWEEN {0} AND {1}", (page - 1) * nrows + 1, page * nrows));
+                sb.AppendLine(" ORDER BY IDTMPNUM");
+                sql = sb.ToString();
+            }
 
             //DataTable data;
             if (pagination)
-                data = MainObj.Dbutil.Runsql(sql, SQLParams);
+                data = MainObj.Dbutil.Runsql(sql, SQLParams, Driver, ConnectionString);
             else
-                data = MainObj.Dbutil.Runsql(PrepareSQL, SQLParams);
+                data = MainObj.Dbutil.Runsql(PrepareSQL, SQLParams, Driver, ConnectionString);
 
 
             MainTab = MainObj.Dbutil.DataToJson(data);
@@ -631,10 +673,20 @@ namespace WpfBu.Models
             var fls = Fcols.Where(f => f.FieldName != tag).Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
             {
                 string s = "";
+                if (Driver=="PGSQL")
+                {
                 if (f.FindString[0] == '!')
-                    s = " (not " + f.FieldName + " like '%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
+                    s = " (not " + f.FieldName + " ilike '%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
                 else
-                    s = " (" + f.FieldName + " like '%" + f.FindString.Replace("'", "''") + "%') ";
+                    s = " (" + f.FieldName + " ilike '%" + f.FindString.Replace("'", "''") + "%') ";
+                }
+                else
+                {
+                    if (f.FindString[0] == '!')
+                    s = " (not " + f.FieldName + " like N'%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
+                else
+                    s = " (" + f.FieldName + " like N'%" + f.FindString.Replace("'", "''") + "%') ";
+                }
                 return s;
             });
 

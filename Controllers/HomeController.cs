@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using WpfBu.Models;
+using System.Text;
 
 
 namespace ServiceManager.Controllers
@@ -29,15 +30,7 @@ namespace ServiceManager.Controllers
         [Authorize]
         public IActionResult Index(string id)
         {
-            /*
-            if (string.IsNullOrEmpty(id))
-            {
-               id = MainObj.CheckAccess("Administrators",User.Identity.Name)?"97":"98";
-            }
-            return Redirect("~/index.html#" + id);
-            */
             return View();
-            
         }
 
 
@@ -164,6 +157,20 @@ namespace ServiceManager.Controllers
                 IsPersistent = true
             });
 
+        }
+    
+        public ActionResult Dump()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult Dump(string sqlstr)
+        {
+            DumpServ ds = new DumpServ();
+            string res = ds.CreateDumpSQL(sqlstr);
+            byte[] buf = Encoding.UTF8.GetBytes(res);
+            return File(buf, "application/octet-stream", "dump.sql");
         }
     }
 }

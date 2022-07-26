@@ -24,6 +24,7 @@ namespace ServiceManager
             MainObj.Dbutil = new DBUtil();
             MainObj.api = Configuration["api"];
             MainObj.ConnectionString = Configuration["ConnectionString"];
+            MainObj.Driver = Configuration["Driver"];
             
         }
 
