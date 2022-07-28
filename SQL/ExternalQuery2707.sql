@@ -193,3 +193,5 @@ $$ language plpgsql;
 
 
 --ag_id,ag_name,ag_comment,ag_serificate
+
+select * from agents order by ag_id

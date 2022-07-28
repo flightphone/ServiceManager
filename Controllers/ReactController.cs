@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace ServiceManager.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class ReactController : Controller
     {
         public JsonResult ClearColumn(string id)
@@ -353,6 +353,7 @@ namespace ServiceManager.Controllers
         {
             try
             {
+                
                 string account = User.Identity.Name;
                 if (string.IsNullOrEmpty(account))
                     account = "sa";
