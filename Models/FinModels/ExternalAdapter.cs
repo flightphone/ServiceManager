@@ -25,7 +25,7 @@ namespace WpfBu.Models
         public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account, string DecName);
         public List<string> procedures { get; set; }
 
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow);
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action);
     }
 
     // /*__external__*/
@@ -40,10 +40,12 @@ namespace WpfBu.Models
                 "p_connectors_edit",
                 "p_connectors_del",
                 "p_querys_edit",
-                "p_querys_del"
+                "p_querys_del",
+                "p_auto_edit",
+                "p_auto_del"
                 };
         }
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow)
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
         {
             //внешние процедуры insert/update/delete 21/07/2022
             if (EditProc == "p_connectors_edit")
@@ -96,7 +98,7 @@ namespace WpfBu.Models
             string apiuri = MainObj.api + "GetAllConnectorsInfo";
             string nci = GetApi(apiuri);
             Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
-            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCIConn(d, ConnectorMap)).ToList();
+            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCIConn(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
             return data;
 
         }
@@ -106,7 +108,15 @@ namespace WpfBu.Models
             string nci = GetApi(apiuri);
             Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
             List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
-            return data;
+            string sql = "select * from mft_import_query(@list)";
+            string lst = string.Join(",", data.Select(d => d["name"]));
+            var t_rpDeclare = MainObj.Dbutil.DataToJson(MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() {{"@list", lst}}));
+            var res = from d in data
+                      join r in t_rpDeclare on d["name"]  equals r["decname"]
+                      select (new List<Dictionary<string, object>>(){d, r}).SelectMany(dict => dict)
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+            
+            return res.OrderBy(d => d["name"]).ToList();
         }
 
         public List<Dictionary<string, object>> GetUserQueryInfo(string Account)

@@ -42,6 +42,22 @@ namespace ServiceManager.Controllers
                 return Json(new { Error = $"Ошибка: {e.Message}" });
             }
         }
+
+        public JsonResult SaveColumnA(string id, string columns)
+        {
+            try
+            {
+                List<Dictionary<string, object>> data = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(columns);
+                ColumnsAdapter C = new ColumnsAdapter();
+                C.Save(id, data);
+                return Json(new { Error = "Колонки таблицы сохранены." });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            }
+        }
+
         public JsonResult UpdateColumn(string id)
         {
 
@@ -50,6 +66,31 @@ namespace ServiceManager.Controllers
                 ColumnsAdapter C = new ColumnsAdapter();
                 C.Update(id, User.Identity.Name);
                 return Json(new { Error = "Колонки таблиц загружены." });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            }
+
+        }
+
+        public JsonResult GetColumn(string id)
+        {
+
+            try
+            {
+                ColumnsAdapter C = new ColumnsAdapter();
+                C.CreateColumn(id, User.Identity.Name);
+                int ord = 1;
+                var res = C.Fcols.Where(f => f.FieldName!="IDTMPNUM").Select(c => new Dictionary<string, object>(){
+                    {"fieldname", c.FieldName},
+                    {"fieldcaption",  c.FieldCaption},
+                    {"width",100},
+                    {"displayformat", c.DisplayFormat},
+                    {"visible",c.Visible},
+                    {"ord", ord++}
+                }).ToList();
+                return Json(res);
             }
             catch (Exception e)
             {
@@ -68,7 +109,7 @@ namespace ServiceManager.Controllers
                 try
                 {
 
-                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow);
+                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow, IdDeclare, mode);
                     List<string> ColumnTab = new List<string>();
                     ColumnTab.AddRange(MainTab.Keys);
                     return Json(new

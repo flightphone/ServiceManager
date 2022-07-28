@@ -142,6 +142,7 @@ namespace WpfBu.Models
 
         public bool AutoCreateColumns = true;
         public List<FinderField> Fcols { get; set; }
+		public List<FinderField> SearchCols { get; set; }
         public Dictionary<string, string> TextParams { get; set; }
 
         public Dictionary<string, object> SQLParams { get; set; }
@@ -227,6 +228,17 @@ namespace WpfBu.Models
             
             if (string.IsNullOrEmpty(DispField))
                 DispField = tag;
+			//28.07.2022
+			SearchCols = new List<FinderField>() { 
+			new FinderField()
+            {
+                FieldName = DispField,
+                FieldCaption = "*",
+                Width = 100,
+                DisplayFormat = "",
+                Visible = false,
+                Sort = "Нет"
+            } };
 
             KeyValue = rd["keyvalue"].ToString();
             SaveFieldList = rd["savefieldlist"].ToString();
@@ -358,7 +370,7 @@ namespace WpfBu.Models
 
 
             //доп. колонка для поиска по всем колонкам
-
+			/*
             Fcols.Add(new FinderField()
             {
                 FieldName = tag,
@@ -368,6 +380,7 @@ namespace WpfBu.Models
                 Visible = false,
                 Sort = "Нет"
             });
+			*/
 
 
         }

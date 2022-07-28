@@ -38,14 +38,20 @@ namespace WpfBu.Models
             MainObj.Dbutil.ExecSQL(sql, param);
         }
 
-        public void Save(string IdDeclare)
+        public void Save(string IdDeclare, List<Dictionary<string, object>> data = null)
         {
-            string sql = $"select * from t_columns where iddeclare = {IdDeclare} order by ordc";
-            DataTable dt = MainObj.Dbutil.Runsql(sql);
-            List<Dictionary<string, object>> data = MainObj.Dbutil.DataToJson(dt);
 
-            sql = $"select 'GridFind' || decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
-            dt = MainObj.Dbutil.Runsql(sql);
+            if (data == null)
+            {
+                string sql0 = $"select * from t_columns where iddeclare = {IdDeclare} order by ordc";
+                DataTable dt0 = MainObj.Dbutil.Runsql(sql0);
+                data = MainObj.Dbutil.DataToJson(dt0);
+            }
+            else
+                data = data.OrderBy(d => int.Parse((d["ord"]??"0").ToString())).ToList();
+
+            string sql = $"select 'GridFind' || decname paramname from t_rpdeclare where iddeclare = {IdDeclare}";
+            DataTable dt = MainObj.Dbutil.Runsql(sql);
             string paramname = dt.Rows[0][0].ToString();
             string grid = @"<GRID FROZENCOLS=""0"" SumFields = """" LabelField = """" LabelText = """">" + '\n';
             grid = grid + string.Join('\n', data.Select(d =>
@@ -69,8 +75,10 @@ namespace WpfBu.Models
             MainObj.Dbutil.ExecSQL(sql, param);
 
         }
-        public void Update(string IdDeclare, string User)
+
+        public void CreateColumn(string IdDeclare, string User)
         {
+
             var F = new Finder();
             F.Account = User;
             if (string.IsNullOrEmpty(F.Account))
@@ -94,8 +102,12 @@ namespace WpfBu.Models
                 Visible = true,
                 Sort = "Нет"
             });
-            string sql = $"delete from t_columns where iddeclare = {IdDeclare}; ";
             Fcols.AddRange(addField);
+        }
+        public void Update(string IdDeclare, string User)
+        {
+            CreateColumn(IdDeclare, User);
+            string sql = $"delete from t_columns where iddeclare = {IdDeclare}; ";
             int ordc = 0;
             sql = sql + string.Join("; ", Fcols.Select(f =>
             {
@@ -104,7 +116,6 @@ namespace WpfBu.Models
                   $"values ({IdDeclare},{ordc},{(f.Visible ? 1 : 0)},'{f.FieldName}','{f.FieldCaption}','{f.DisplayFormat}',{f.Width})";
             }));
             MainObj.Dbutil.ExecSQL(sql, null);
-
         }
     }
     public class Editor : RootForm
@@ -137,7 +148,7 @@ namespace WpfBu.Models
                 {
                     jr = new JoinRow();
                     string ClassName = a[0]["classname"].ToString();
-                    if (ClassName == "Bureau.Finder" || ClassName == "Bureau.GridCombo")
+                    if (ClassName == "Bureau.Finder" || ClassName == "Bureau.GridCombo" || ClassName == "CheckList")
                     {
                         jr.classname = ClassName;
                         jr.IdDeclare = a[0]["iddeclare"].ToString();
