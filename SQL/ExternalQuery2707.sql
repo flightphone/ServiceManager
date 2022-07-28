@@ -72,3 +72,124 @@ $$ LANGUAGE 'plpgsql';
 
 --select * from t_ntusers;
 
+create table agents
+(
+    ag_id serial,
+    ag_name varchar(256),
+    ag_comment varchar(256),
+    ag_serificate varchar,
+    constraint pk_agents primary KEY
+    (ag_id)
+);
+
+create function p_agents_edit
+
+(
+
+_ag_id int4
+
+,_ag_name varchar (256) DEFAULT null
+
+,_ag_comment varchar (256) DEFAULT null
+
+,_ag_serificate varchar DEFAULT null
+
+
+
+ )
+
+ returns setof agents
+
+ as
+
+ $$
+
+ begin
+
+ if exists(select ag_id from agents where ag_id = _ag_id) then
+
+    update agents
+
+	set 
+
+        ag_name = _ag_name 
+
+        ,ag_comment = _ag_comment
+
+        ,ag_serificate = _ag_serificate
+
+            
+
+    where	
+
+	    ag_id = _ag_id;
+
+ else
+
+	if (_ag_id is null ) then
+
+		_ag_id := nextval('agents_ag_id_seq'::regclass);
+
+	end if;   
+
+   insert into agents(
+
+        ag_id
+
+        ,ag_name 
+
+        ,ag_comment 
+
+        ,ag_serificate 
+
+            
+
+	) 
+
+   values (
+
+        _ag_id
+
+        ,_ag_name
+
+        ,_ag_comment
+
+        ,_ag_serificate
+
+             
+
+	  );
+
+ end if;
+
+  return query select * from agents where ag_id = _ag_id;
+
+end;
+
+$$ language plpgsql;
+
+
+
+
+
+create function p_agents_del (_ag_id int4)
+
+returns void
+
+as
+
+$$
+
+begin
+
+   delete from agents where ag_id = _ag_id;
+
+end;
+
+$$ language plpgsql;
+
+
+
+
+
+--ag_id,ag_name,ag_comment,ag_serificate

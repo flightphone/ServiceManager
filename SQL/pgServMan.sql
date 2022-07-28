@@ -535,7 +535,7 @@ $BODY$;
 
 ALTER FUNCTION p_lbrsetparam(_paramname varchar, _paramvalue varchar, _paramdescription varchar)
     OWNER TO postgres;
-CREATE FUNCTION p_ntusers_del(_username varchar)
+CREATE OR REPLACE FUNCTION p_ntusers_del(_username varchar)
     RETURNS void
     LANGUAGE 'plpgsql'
     COST 100.0
@@ -543,6 +543,7 @@ CREATE FUNCTION p_ntusers_del(_username varchar)
 AS $BODY$
 
 begin
+   delete from t_accessreport where account = _username;
    delete from t_ntusers where username = _username;
 end;
 

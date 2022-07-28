@@ -56,7 +56,7 @@ namespace WpfBu.Models
 
 
             DataTable res = Dbutil.Runsql(sql, new Dictionary<string, object>(){
-                {"@grp", Account},
+                {"@grp", grp},
                 {"@account", Account}
 
             });

@@ -83,7 +83,7 @@ namespace WpfBu.Models
                 return GetAllQueryInfo();
             }
 
-            if (IdDeclare == "150")
+            if (IdDeclare == "168")
             {
                 return GetUserQueryInfo(Account);
             }
@@ -126,9 +126,29 @@ namespace WpfBu.Models
             string nci = GetApi(apiuri);
             Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
             List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
+            string sql = "select * from mft_import_query(@list)";
+            string lst = string.Join(",", data.Select(d => d["name"]));
+            var t_rpDeclare = MainObj.Dbutil.DataToJson(MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() {{"@list", lst}}));
+            var res = from d in data
+                      join r in t_rpDeclare on d["name"]  equals r["decname"]
+                      select (new List<Dictionary<string, object>>(){d, r}).SelectMany(dict => dict)
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+            
             //Фильтровка
+            List<Dictionary<string, object>> resdata;
+            if (MainObj.CheckAccess("Administrators", Account))
+                resdata = res.OrderBy(d => d["name"]).ToList();
+            else
+            {
+                sql = "select description from t_ntusers where username = @username";
+                DataTable dt = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@username", Account}});
+                List<string> listNCI = dt.Rows[0][0].ToString().Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+                
+                resdata = res.Where(d => listNCI.Contains(d["dbconnectorname"])).OrderBy(d => d["name"]).ToList();
+            }    
+            
             //data = data.Where(d => (d["userid"] ?? "").ToString() == Account).ToList();
-            return data;
+            return resdata;
         }
 
         public List<Dictionary<string, object>> GetDataNci(string name)
