@@ -82,7 +82,19 @@ create table agents
     (ag_id)
 );
 
-create function p_agents_edit
+create view v_agents
+AS
+select
+    ag_id,
+    ag_id ag_code,
+    ag_name,
+    ag_comment,
+    ag_serificate
+from agents;
+
+--drop function p_agents_edit (_ag_id int4,_ag_name varchar (256),_ag_comment varchar (256),_ag_serificate varchar)
+
+create or replace function p_agents_edit
 
 (
 
@@ -98,7 +110,7 @@ _ag_id int4
 
  )
 
- returns setof agents
+ returns setof v_agents
 
  as
 
@@ -126,11 +138,11 @@ _ag_id int4
 
  else
 
-	if (_ag_id is null ) then
+	
 
-		_ag_id := nextval('agents_ag_id_seq'::regclass);
+	_ag_id := nextval('agents_ag_id_seq'::regclass);
 
-	end if;   
+	
 
    insert into agents(
 
@@ -162,7 +174,7 @@ _ag_id int4
 
  end if;
 
-  return query select * from agents where ag_id = _ag_id;
+  return query select * from v_agents where ag_id = _ag_id;
 
 end;
 
