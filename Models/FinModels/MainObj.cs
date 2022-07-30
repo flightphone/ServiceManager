@@ -64,7 +64,7 @@ namespace WpfBu.Models
             return (r > 0);
 
         }
-      
+
 
         public static string api { get; set; }
 
@@ -270,6 +270,72 @@ namespace WpfBu.Models
             sql = "select " + c_default + " id";
             var result = Runsql(sql);
             return result.Rows[0]["id"];
+        }
+
+        public DataTable CommandBuild(Dictionary<string, object> WorkRow, string EditProc, string Driver, string ConnectionString)
+        {
+            var vals = new List<string>();
+            var Param = new Dictionary<string, object>();
+            Regex re = new Regex(@"[-+]?[0-9]*[\.,][0-9]*");
+            foreach (string fname in WorkRow.Keys)
+            {
+                string pname;
+                string pval = (WorkRow[fname] ?? "").ToString();
+                DateTime dval;
+                Double duval;
+
+                if (Driver == "PGSQL")
+                {
+                    if (string.IsNullOrEmpty(pval))
+                        pname = "null";
+                    else
+                    {
+                        pname = $"'{pval.Replace("'", "''")}'";
+                    }
+                }
+                else
+                {
+                    pname = "@_" + fname;
+                    if (re.IsMatch(pval) && Double.TryParse(pval.Replace(".", ","), out duval))
+                    {
+                        Param.Add(pname, duval);
+                    }
+                    else
+                    if (DateTime.TryParse(pval, out dval))
+                    {
+                        Param.Add(pname, dval);
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(WorkRow[fname].ToString()))
+                        {
+                            Param.Add(pname, DBNull.Value);
+                        }
+                        else
+                        {
+                            Param.Add(pname, WorkRow[fname]);
+                        }
+                    }
+                }
+
+                string val = "";
+                if (Driver == "PGSQL")
+                    val = $"_{fname} => {pname}";
+                else
+                    val = $"@{fname} = {pname}";
+                vals.Add(val);
+            }
+            string sqlpar = string.Join(",", vals);
+            string sql = "";
+
+            if (Driver == "PGSQL")
+                sql = $"select * from {EditProc}({sqlpar})";
+            else
+                sql = $"exec {EditProc} {sqlpar}";
+
+            DataTable data = Runsql(sql, Param, Driver, ConnectionString);
+            return data;
+
         }
     }
 

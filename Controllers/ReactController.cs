@@ -8,11 +8,12 @@ using System.Data;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Npgsql;
+using System.Data.SqlClient;
 using System.Linq;
 
 namespace ServiceManager.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ReactController : Controller
     {
         public JsonResult ClearColumn(string id)
@@ -82,7 +83,7 @@ namespace ServiceManager.Controllers
                 ColumnsAdapter C = new ColumnsAdapter();
                 C.CreateColumn(id, User.Identity.Name);
                 int ord = 1;
-                var res = C.Fcols.Where(f => f.FieldName!="IDTMPNUM").Select(c => new Dictionary<string, object>(){
+                var res = C.Fcols.Where(f => f.FieldName != "IDTMPNUM").Select(c => new Dictionary<string, object>(){
                     {"fieldname", c.FieldName},
                     {"fieldcaption",  c.FieldCaption},
                     {"width",100},
@@ -147,74 +148,15 @@ namespace ServiceManager.Controllers
                 }
             }
 
-            var vals = new List<string>();
-            var Param = new Dictionary<string, object>();
-            Regex re = new Regex(@"[-+]?[0-9]*[\.,][0-9]*");
-            foreach (string fname in WorkRow.Keys)
-            {
-                string pname;
-                string pval = (WorkRow[fname] ?? "").ToString();
-                DateTime dval;
-                Double duval;
-
-                if (Driver == "PGSQL")
-                {
-                    if (string.IsNullOrEmpty(pval))
-                        pname = "null";
-                    else
-                    {
-                        pname = $"'{pval.Replace("'", "''")}'";
-                    }
-                }
-                else
-                {
-                    pname = "@_" + fname;
-                    if (re.IsMatch(pval) && Double.TryParse(pval.Replace(".", ","), out duval))
-                    {
-                        Param.Add(pname, duval);
-                    }
-                    else
-                    if (DateTime.TryParse(pval, out dval))
-                    {
-                        Param.Add(pname, dval);
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(WorkRow[fname].ToString()))
-                        {
-                            Param.Add(pname, DBNull.Value);
-                        }
-                        else
-                        {
-                            Param.Add(pname, WorkRow[fname]);
-                        }
-                    }
-                }
-
-                string val = "";
-                if (Driver == "PGSQL")
-                    val = $"_{fname} => {pname}";
-                else
-                    val = $"@{fname} = {pname}";
-                vals.Add(val);
-            }
-            string sqlpar = string.Join(",", vals);
-            string sql = "";
-
-            if (Driver == "PGSQL")
-                sql = $"select * from {EditProc}({sqlpar})";
-            else
-                sql = $"exec {EditProc} {sqlpar}";
-
-
-
-            DataTable data;
+            
 
             try
             {
-                data = MainObj.Dbutil.Runsql(sql, Param, Driver, ConnectionString);
+                
+                DataTable data = MainObj.Dbutil.CommandBuild(WorkRow, EditProc, Driver, ConnectionString);
                 List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
-                List<string> ColumnTab = MainObj.Dbutil.DataColumn(data);
+                List<string> ColumnTab =  MainObj.Dbutil.DataColumn(data);
+                
                 return Json(new
                 {
                     message = message,
@@ -353,7 +295,7 @@ namespace ServiceManager.Controllers
         {
             try
             {
-                
+
                 string account = User.Identity.Name;
                 if (string.IsNullOrEmpty(account))
                     account = "sa";
@@ -362,8 +304,9 @@ namespace ServiceManager.Controllers
                 //var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
                 //DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
                 ExternalAdapter ea = new ExternalAdapter();
-                var data = ea.GetUserQueryInfo(account);
+                ea.UpdateNciData();
 
+                var data = ea.GetUserQueryInfo(account);
                 List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
                 int n = Math.Min(8, data.Count());
                 /*
@@ -386,7 +329,7 @@ namespace ServiceManager.Controllers
                             {"iddeclare", Rows["iddeclare"].ToString()},
                             {"text", Rows["name"].ToString()}
                         };
-                    res.Add(r);    
+                    res.Add(r);
                 }
                 for (int i = n; i < 8; i++)
                 {
@@ -460,6 +403,37 @@ namespace ServiceManager.Controllers
             */
 
         }
+
+        public ActionResult CommandBuilder(string table)
+        {
+            try
+            {
+                if (MainObj.Driver == "PGSQL")
+                {
+                    string sql = $"select * from {table}";
+                    NpgsqlDataAdapter da = new NpgsqlDataAdapter(sql, MainObj.ConnectionString);
+                    NpgsqlCommandBuilder cm = new NpgsqlCommandBuilder(da);
+                    return Content(cm.GetUpdateCommand().CommandText + "\n ====== \n"
+                    + cm.GetInsertCommand().CommandText + "\n ====== \n"
+                    + cm.GetDeleteCommand().CommandText);
+                }
+                else
+                {
+                    string sql = $"select * from {table}";
+                    SqlDataAdapter da = new SqlDataAdapter(sql, MainObj.ConnectionString);
+                    SqlCommandBuilder cm = new SqlCommandBuilder(da);
+                    return Content(cm.GetUpdateCommand().CommandText + "\n ====== \n"
+                    + cm.GetInsertCommand().CommandText + "\n ====== \n"
+                    + cm.GetDeleteCommand().CommandText);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.Message);
+            }
+
+        }
+
     }
 
 }
