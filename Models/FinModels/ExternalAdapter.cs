@@ -108,7 +108,7 @@ namespace WpfBu.Models
                      return r;
                  })
             );
-            apiuri = MainObj.api + "GetAllQueryInfo";
+            apiuri = MainObj.api + "GetAllQueryInfo/Select";
             nci = GetApi(apiuri);
             ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
             data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
@@ -299,7 +299,8 @@ namespace WpfBu.Models
             //Заглушка для теста:
             ncirow["UserID"] = "123";
             string jobj = JsonConvert.SerializeObject(ncirow);
-            string apiuri = $"{MainObj.api}AddQuery?Query={jobj}";
+            //string apiuri = $"{MainObj.api}AddQuery?Query={jobj}";
+            string apiuri = $"{MainObj.api}AddQuery/Select?Query={jobj}";
 
             DeleteQuery(WorkRow, EditProc);
             string nci = GetApi(apiuri);
@@ -320,7 +321,7 @@ namespace WpfBu.Models
         {
             
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            string apiuri = $"{MainObj.api}DeleteQuery/{WorkRow["name"].ToString()}";
+            string apiuri = $"{MainObj.api}DeleteQuery/Select/{WorkRow["name"].ToString()}";
             string nci = GetApi(apiuri);
             return WorkRow;
         }

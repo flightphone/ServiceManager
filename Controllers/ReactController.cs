@@ -304,7 +304,7 @@ namespace ServiceManager.Controllers
                 //var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
                 //DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
                 ExternalAdapter ea = new ExternalAdapter();
-                //ea.UpdateNciData(); //Во время отладки не обновляем
+                ea.UpdateNciData(); //Во время отладки не обновляем
 
                 var data = ea.GetUserQueryInfo(account);
                 List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
