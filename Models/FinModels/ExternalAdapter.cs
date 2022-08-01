@@ -276,6 +276,8 @@ namespace WpfBu.Models
         public Dictionary<string, object> AddConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
             
+            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+            
             Dictionary<string, object> ncirow = ToNCI(WorkRow, ConnectorMap);
             string jobj = JsonConvert.SerializeObject(ncirow);
             string apiuri = $"{MainObj.api}AddConnector?Conn={jobj}";
@@ -283,13 +285,16 @@ namespace WpfBu.Models
             DeleteConnector(WorkRow, EditProc);
             string nci = GetApi(apiuri);
             
-            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+            
             return WorkRow;
         }
 
         public Dictionary<string, object> AddQuery(Dictionary<string, object> WorkRow, string EditProc)
         {
-            
+
+            DataTable data = MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+            List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
+
             Dictionary<string, object> ncirow = ToNCI(WorkRow, QueryMap);
             //Заглушка для теста:
             ncirow["UserID"] = "123";
@@ -299,26 +304,24 @@ namespace WpfBu.Models
             DeleteQuery(WorkRow, EditProc);
             string nci = GetApi(apiuri);
             
-            DataTable data = MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
             return MainTab[0];
         }
 
         public Dictionary<string, object> DeleteConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
            
+            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             string apiuri = $"{MainObj.api}DeleteConnector/{WorkRow["name"].ToString()}";
             string nci = GetApi(apiuri);
-            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             return WorkRow;
         }
 
         public Dictionary<string, object> DeleteQuery(Dictionary<string, object> WorkRow, string EditProc)
         {
-           
+            
+            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             string apiuri = $"{MainObj.api}DeleteQuery/{WorkRow["name"].ToString()}";
             string nci = GetApi(apiuri);
-            MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             return WorkRow;
         }
 

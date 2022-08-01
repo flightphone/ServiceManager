@@ -112,8 +112,26 @@ _name varchar (100)
 end;
 $$ language plpgsql;
 
+----------------Agents----------------------------------
+
+drop function p_agents_edit
+(
+_ag_id int4
+,_ag_name varchar (256)
+,_ag_comment varchar (256)
+,_ag_serificate varchar
+ );
+
+drop view v_agents;
+
+--drop function get_agents_query (ag_id int)
+
 update agents
 set ag_serificate = 'Действует';
+
+alter table agents
+add column ag_file integer default(0);
+
 
 create function get_agents_query (ag_id int)
 returns varchar
@@ -133,4 +151,172 @@ BEGIN
 END;   
 $$ language plpgsql;
 
-select get_agents_query(1);
+
+create or replace view v_agents
+AS
+select
+    ag_id,
+    ag_name,
+    ag_comment,
+    ag_serificate,
+    ag_file,
+    get_agents_query(ag_id) agents_query
+from agents;
+
+create or replace function p_agents_edit
+
+(
+_ag_id int4
+,_ag_name varchar (256) DEFAULT null
+,_ag_comment varchar (256) DEFAULT null
+,_ag_serificate varchar DEFAULT null
+,_ag_file integer DEFAULT 0
+ )
+ returns setof v_agents
+ as
+ $$
+ begin
+ if exists(select ag_id from agents where ag_id = _ag_id) then
+    update agents
+	set 
+        ag_name = _ag_name 
+        ,ag_comment = _ag_comment
+        ,ag_serificate = _ag_serificate
+        ,ag_file = _ag_file
+    where	
+	    ag_id = _ag_id;
+ else
+	_ag_id := nextval('agents_ag_id_seq'::regclass);
+   insert into agents(
+        ag_id
+        ,ag_name 
+        ,ag_comment 
+        ,ag_serificate 
+        ,ag_file
+	) 
+   values (
+        _ag_id
+        ,_ag_name
+        ,_ag_comment
+        ,_ag_serificate
+        ,_ag_file
+	  );
+ end if;
+  return query select * from v_agents where ag_id = _ag_id;
+end;
+$$ language plpgsql;
+
+
+--select * from v_agents
+
+--select get_agents_query(1);
+
+--update agents set ag_file = 0
+
+----------------------------------File system----------------------
+create table fileh
+(
+   fh_pk serial not null primary key,
+   fh_name varchar(256),
+   fh_sysname varchar(256)
+);
+
+create function p_fileh_edit
+
+(
+
+_fh_pk int4
+
+,_fh_name varchar (256) DEFAULT null
+
+,_fh_sysname varchar (256) DEFAULT null
+
+
+
+ )
+
+ returns setof fileh
+
+ as
+
+ $$
+
+ begin
+
+ if exists(select fh_pk from fileh where fh_pk = _fh_pk) then
+
+    update fileh
+
+	set 
+
+        fh_name = _fh_name 
+
+        ,fh_sysname = _fh_sysname
+
+            
+
+    where	
+
+	    fh_pk = _fh_pk;
+
+ else
+
+	if (_fh_pk is null ) then
+
+		_fh_pk := nextval('fileh_fh_pk_seq'::regclass);
+
+	end if;   
+
+   insert into fileh(
+
+        fh_pk
+
+        ,fh_name 
+
+        ,fh_sysname 
+
+            
+
+	) 
+
+   values (
+
+        _fh_pk
+
+        ,_fh_name
+
+        ,_fh_sysname
+
+             
+
+	  );
+
+ end if;
+
+  return query select * from fileh where fh_pk = _fh_pk;
+
+end;
+
+$$ language plpgsql;
+
+
+
+
+
+create function p_fileh_del (_fh_pk int4)
+
+returns void
+
+as
+
+$$
+
+begin
+
+   delete from fileh where fh_pk = _fh_pk;
+
+end;
+
+$$ language plpgsql;
+
+

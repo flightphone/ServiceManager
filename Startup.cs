@@ -72,7 +72,7 @@ namespace ServiceManager
 
 
             app.UseCors(builder =>
-                builder.SetIsOriginAllowed(s => (s == "http://localhost:8080")).AllowCredentials().AllowAnyHeader().AllowAnyMethod()
+                builder.SetIsOriginAllowed(s => (true)).AllowCredentials().AllowAnyHeader().AllowAnyMethod()
             );
 
 

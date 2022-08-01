@@ -148,7 +148,7 @@ namespace WpfBu.Models
                 {
                     jr = new JoinRow();
                     string ClassName = a[0]["classname"].ToString();
-                    if (ClassName == "Bureau.Finder" || ClassName == "Bureau.GridCombo" || ClassName == "CheckList")
+                    if (ClassName == "Bureau.Finder" || ClassName == "Bureau.GridCombo" || ClassName == "CheckList" || ClassName == "List")
                     {
                         jr.classname = ClassName;
                         jr.IdDeclare = a[0]["iddeclare"].ToString();

@@ -176,6 +176,8 @@ namespace WpfBu.Models
 
         public string IdDeclareSet { get; set; }
         public Finder Setting { get; set; }
+		//01/08/2022 поле ссылки на прикрепленные файлы
+		public string AddKeys {get; set;}
         public override void start(object o)
         {
 
@@ -246,6 +248,9 @@ namespace WpfBu.Models
 
             //параметры 17.09.2020
             IdDeclareSet = rd["dispparamname"].ToString();
+			
+			//Файлы 01.02.2022
+			AddKeys = rd["addkeys"].ToString();
             //04.06.2021
             if ((int)rd["dectype"] > 30)
                 nrows = (int)rd["dectype"];
