@@ -300,44 +300,45 @@ namespace ServiceManager.Controllers
                 if (string.IsNullOrEmpty(account))
                     account = "sa";
 
+                List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
 
-                //var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
-                //DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
-                ExternalAdapter ea = new ExternalAdapter();
+                int n = 0;
                 try
                 {
+                    //mtf banner
+                    ExternalAdapter ea = new ExternalAdapter();
                     ea.UpdateNciData(); //Во время отладки не обновляем
-                }
-                catch
-                {
-                    ;
-                }
+                    var data = ea.GetUserQueryInfo(account);
 
-                var data = ea.GetUserQueryInfo(account);
-                List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
-                int n = Math.Min(8, data.Count());
-                /*
-                for (int i = 0; i < n; i++)
-                {
-                    
-                    Dictionary<string, string> r = new Dictionary<string, string>() {
-                            {"id", data.Rows[i]["idmenu"].ToString()},
-                            {"iddeclare", data.Rows[i]["params"].ToString()},
-                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
-                        };
-                    res.Add(r); 
-                }
-                */
-                for (int i = 0; i < n; i++)
-                {
-                    var Rows = data[i];
-                    Dictionary<string, string> r = new Dictionary<string, string>() {
+                    n = Math.Min(8, data.Count());
+                    for (int i = 0; i < n; i++)
+                    {
+                        var Rows = data[i];
+                        Dictionary<string, string> r = new Dictionary<string, string>() {
                             {"id", $"{Rows["iddeclare"].ToString()}_query"},
                             {"iddeclare", Rows["iddeclare"].ToString()},
                             {"text", Rows["name"].ToString()}
                         };
-                    res.Add(r);
+                        res.Add(r);
+                    }
                 }
+                catch
+                {
+                    //common banner
+                    var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
+                    DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
+                    n = Math.Min(8, data.Rows.Count);
+                    for (int i = 0; i < n; i++)
+                    {
+                        Dictionary<string, string> r = new Dictionary<string, string>() {
+                            {"id", data.Rows[i]["idmenu"].ToString()},
+                            {"iddeclare", data.Rows[i]["params"].ToString()},
+                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
+                        };
+                        res.Add(r);
+                    }
+                }
+
                 for (int i = n; i < 8; i++)
                 {
                     Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);

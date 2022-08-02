@@ -182,16 +182,8 @@ namespace WpfBu.Models
         {
 
             IdDeclare = o.ToString();
-            string sql;
-
-            
-            if (MainObj.Driver == "PGSQL")
-                sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' || d.decname = p.paramname where iddeclare = ";
-            else
-                sql = "select iddeclare, decname, descr, dectype, decsql, keyfield, dispfield, keyvalue, dispvalue, keyparamname, dispparamname, isbasename, descript, addkeys, tablename, editproc, delproc, image_bmp, savefieldlist, p.paramvalue from t_rpdeclare d left join t_sysparams p on 'GridFind' + d.decname = p.paramname where iddeclare = ";
-            sql = sql + o.ToString();
-            //MainObj.Dbutil = new DBUtil();
-            DataTable t_rp = MainObj.Dbutil.Runsql(sql);
+            string sql= "select * from v_t_rpdeclare where iddeclare = @iddeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>{{"@iddeclare", int.Parse(o.ToString())}});
             DataRow rd = t_rp.Rows[0];
             string paramvalue = rd["paramvalue"].ToString();
             if (string.IsNullOrEmpty(SQLText))

@@ -30,6 +30,8 @@ namespace ServiceManager.Controllers
                 FileInfo fi = new FileInfo(path);
                 path = fi.FullName;
                 string ctype = "application/octet-stream";
+                if (!System.IO.File.Exists(path))
+                    throw new Exception("Файл не найден");
                 return PhysicalFile(path, ctype, fh_name);
             }
             catch (Exception e)
