@@ -259,6 +259,10 @@ namespace WpfBu.Models
                 res.Add(p.Value, bu[p.Key]);
             return res;
         }
+        public string TestApi()
+        {
+            return  GetApi($"{MainObj.api}Test");
+        }
         public string GetApi(string apiuri)
         {
             string res = "";

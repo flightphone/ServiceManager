@@ -16,6 +16,19 @@ namespace ServiceManager.Controllers
     [Authorize]
     public class ReactController : Controller
     {
+        public JsonResult TestApi(string id)
+        {
+            try
+            {
+                ExternalAdapter ea = new ExternalAdapter();
+                ea.TestApi();
+                return Json(new { Error = "OK" });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            }
+        }
         public JsonResult ClearColumn(string id)
         {
             try
@@ -293,34 +306,44 @@ namespace ServiceManager.Controllers
 
         public JsonResult Banner()
         {
+            //try
+            //{
+
+            string account = User.Identity.Name;
+            if (string.IsNullOrEmpty(account))
+                account = "sa";
+
+            List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
+
+            int n = 0;
             try
             {
-
-                string account = User.Identity.Name;
-                if (string.IsNullOrEmpty(account))
-                    account = "sa";
-
-                List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
-
-                int n = 0;
+                //mtf banner
+                ExternalAdapter ea = new ExternalAdapter();
+                string message = "OK";
                 try
                 {
-                    //mtf banner
-                    ExternalAdapter ea = new ExternalAdapter();
-                    ea.UpdateNciData(); //Во время отладки не обновляем
-                    var data = ea.GetUserQueryInfo(account);
+                    ea.TestApi();
+                    //ea.UpdateNciData(); //Во время отладки не обновляем
+                }
+                catch (Exception e)
+                {
+                    message = e.Message;
+                }
+                var data = ea.GetUserQueryInfo(account);
 
-                    n = Math.Min(8, data.Count());
-                    for (int i = 0; i < n; i++)
-                    {
-                        var Rows = data[i];
-                        Dictionary<string, string> r = new Dictionary<string, string>() {
+                n = Math.Min(8, data.Count());
+                for (int i = 0; i < n; i++)
+                {
+                    var Rows = data[i];
+                    Dictionary<string, string> r = new Dictionary<string, string>() {
                             {"id", $"{Rows["iddeclare"].ToString()}_query"},
                             {"iddeclare", Rows["iddeclare"].ToString()},
                             {"text", Rows["name"].ToString()}
                         };
-                        res.Add(r);
-                    }
+                    res.Add(r);
+                }
+                /*
                 }
                 catch
                 {
@@ -338,13 +361,14 @@ namespace ServiceManager.Controllers
                         res.Add(r);
                     }
                 }
+                */
 
                 for (int i = n; i < 8; i++)
                 {
                     Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
                     res.Add(r);
                 }
-                return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList() });
+                return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList(), Error = message });
             }
             catch (Exception e)
             {
