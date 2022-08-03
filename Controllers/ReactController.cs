@@ -324,7 +324,7 @@ namespace ServiceManager.Controllers
                 try
                 {
                     ea.TestApi();
-                    //ea.UpdateNciData(); //Во время отладки не обновляем
+                    ea.UpdateNciData(); //Во время отладки не обновляем
                 }
                 catch (Exception e)
                 {
