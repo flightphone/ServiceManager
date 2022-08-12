@@ -321,10 +321,12 @@ namespace ServiceManager.Controllers
                 //mtf banner
                 ExternalAdapter ea = new ExternalAdapter();
                 string message = "OK";
+                bool adm = false;
                 try
                 {
                     ea.TestApi();
                     ea.UpdateNciData(); //Во время отладки не обновляем
+                    adm = MainObj.CheckAccess("Administrators", account);
                 }
                 catch (Exception e)
                 {
@@ -368,7 +370,7 @@ namespace ServiceManager.Controllers
                     Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
                     res.Add(r);
                 }
-                return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList(), Error = message });
+                return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList(), Error = message, Admin = adm });
             }
             catch (Exception e)
             {
