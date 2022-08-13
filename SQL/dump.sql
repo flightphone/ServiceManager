@@ -10,31 +10,23 @@ truncate table t_sysstatus;
 ----------------------------------------------------
 
 insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
-values ('Admin','Администратор',null,null,'123',null,null,null);
+values ('sa',null,null,'Operators','1',null,null,null);
 insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
-values ('User2',null,'Airlines,CH','Operators','123','test',null,null);
-insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
-values ('User',null,'CH,MSSQL','Operators','123',null,null,null);
-insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
-values ('User6',null,'Airlines,ConnName11,FB,MSSQL','Operators','123','test',null,null);
+values ('Guest','Guest123',null,null,'Guest',null,null,null);
 
 insert into t_usergroup(groupname,type,caption)
 values ('Operators',null,'Операторы');
 insert into t_usergroup(groupname,type,caption)
 values ('Administrators','4','Администраторы');
+insert into t_usergroup(groupname,type,caption)
+values ('Guests',null,'тест');
 
-insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Administrators','Admin','Admin','Admin','0','1dc3cdec-c91c-11eb-907c-3fa681425964');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Справка','Administrators','Administrators','Группа пользователей','4','1dc89341-c91c-11eb-9092-af06b9544ab2');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Справка','Operators','Operators','Группа AD','4','9bf22f52-0515-11ed-9f9e-7fb0ce53f084');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Коннекторы','Administrators','Administrators','Группа AD','4','5933c6cc-05b4-11ed-9835-bfae8681b582');
-insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Запросы2','Operators','Operators','Группа AD','4','c5c18d02-0e46-11ed-89df-2ffa835d1eb6');
-insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Запросы','Administrators','Administrators','Группа AD','4','e6fac9b6-05c2-11ed-abeb-dffc0ed72d7f');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Агенты','Administrators','Administrators','Группа AD','4','0435c9de-0e58-11ed-ad92-f7ae15f955ed');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
@@ -46,20 +38,26 @@ values ('MtfUsers','Administrators','Administrators','Группа AD','4','441c
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Administrators','Ivanov','Ivanov','Ivanov','0','08fd3db0-0da1-11ed-be7a-9bf4aea6a765');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Operators','User2','User2','User2','0','586b680c-107d-11ed-8ce4-271fc8eda16e');
+values ('Operators','sa','sa','sa','0','90cfe25e-1226-11ed-b846-df5caaa24caa');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Operators','User','User','User','0','5e8232c0-107d-11ed-afac-ff86e33b0f5e');
+values ('Запросы','Administrators','Administrators','Группа AD','4','96c4f354-1b1b-11ed-a564-9301529159b0');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Operators','User6','User6','User6','0','b7f40972-10a6-11ed-87a7-5f84843972ab');
+values ('Guests','Guest','Guest123','user','0','7e195ede-1b1c-11ed-8503-87dd750f1e81');
+insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
+values ('Агенты','Guests','Guests','Группа AD','4','9b6f4cf0-1b1c-11ed-8504-3b51dc5b21f6');
+insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
+values ('Авиакомпании','Guests','Guests','Группа AD','4','e87daaae-1b1d-11ed-87cb-eb73a758c367');
 
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
-values ('109','800','Агенты',null,'ALL','Bureau.Finder','Агенты','169',null,null);
+values ('110','110','Авиакомпании',null,'ALL','Bureau.Finder','Авиакомпании','170',null,null);
+insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
+values ('109','800','Заказчики',null,'ALL','Bureau.Finder','Агенты','169',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('92','805','Источники НСИ',null,'ALL','Bureau.Finder','Коннекторы','146',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
-values ('97','810','Запросы (Admin)',null,'ALL','Declare','Запросы','149',null,null);
+values ('97','810','Запросы',null,'ALL','Declare','Запросы','149',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
-values ('108','815','Запросы (Operators)',null,'ALL','Declare','Запросы2','168',null,null);
+values ('108','815','Запрoсы',null,'ALL','Declare','Запросы2','168',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('107','830','Пользователи',null,'ALL','Bureau.Finder','MtfUsers','167',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
@@ -85,9 +83,9 @@ values ('64','1045','Настройки/Резервное копировани�
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('73','1046','Настройки/Setup',null,'ALL','Bureau.Setup','Setup',null,null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
-values ('84','2000','Справка',null,'ALL','/help.pdf','Справка',null,null,null);
-insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('75','2000','Настройки/SqlAdmin',null,'ALL','/sqladmin.html','sqladmin',null,null,null);
+insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
+values ('84','2000','Справка',null,'ALL','/help.pdf','Справка',null,null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('90','1000000','Выход',null,'ALL','exit','exit',null,null,null);
 
@@ -102,7 +100,7 @@ values ('116','ObjectAccess','Группы пользователей','30','sel
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('117','ObjectAccess','Права доступа','100','select * from v_object  order by objcod, objectname','objectname','objectname','118',null,null,null,'0',null,null,null,null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('118','t_AccessReport','Пользователи в группе','7','select *, grp objectname from t_accessreport where grp = ''[objectname]'' order by account','ac_pk','account',null,null,null,null,'0',null,'GRP','t_accessreport','p_t_accessreport_edit','p_t_accessreport_del',null,'ac_pk,objectname,account,fullname,email,type');
+values ('118','t_AccessReport','Пользователи в группе','7','select *, grp objectname from t_accessreport where grp = ''[objectname]'' order by account','ac_pk','account',null,null,null,null,'0',null,null,'t_accessreport','p_t_accessreport_edit','p_t_accessreport_del',null,'ac_pk,objectname,account,fullname,email,type');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('119','FreeAccount','Свободные логины','7','select * from fn_freeaccount (''[grp]'') order by account','account','account',null,null,null,null,'0',null,null,null,null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
@@ -120,9 +118,9 @@ values ('128','FreeAccount','Свободные логины 2','100','select * 
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('145','contype','Тип коннектора','17','select * from contype order by cn_id','cn_id','cn_typedb',null,null,null,null,null,null,null,null,null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('146','v_connectors','Источники НСИ','30','select * from v_connectors order by name /*__external__*/','name',null,null,null,null,null,null,null,null,'connectors','p_connectors_edit','p_connectors_del',null,'name,username,password,address,dbname,typedb');
+values ('146','v_connectors','Источники НСИ','30','select * from v_connectors order by name /*__external__*/','name','name',null,null,null,null,null,null,null,'connectors','p_connectors_edit','p_connectors_del',null,'name,username,password,address,dbname,typedb');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('149','querys','Запросы','30','select * from querys order by name /*__external__*/','name',null,'152',null,null,null,null,null,null,'querys','p_querys_edit','p_querys_del',null,'name,userid,command,dbconnectorname');
+values ('149','querys','Запросы','30','select * from querys order by name /*__external__*/','name',null,null,null,null,null,null,null,null,'querys','p_querys_edit','p_querys_del',null,'name,userid,command,dbconnectorname');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('151','testcolumn','тест колонок (Услуги)','30','/*__external__*/',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
@@ -130,19 +128,17 @@ values ('152','queryexecute','Результаты запроса','30','/*__ext
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('156','ACTypes','Типы ВС 2','30','select * from ACTypes (nolock) order by AT_UTG','AT_PK','AT_NameEn',null,null,null,null,null,'MSSQL@data source=localhost\SQLEXPRESS8;User ID=sa;Password=aA12345678;database=uFlights',null,null,'p_ACTypes_EDIT','p_ACTypes_DEL',null,'AT_PK,AT_UTG,AT_IATA,AT_ICAO,AT_STC,AT_NameEn,AT_NameRu,AT_FullNameEn,AT_FullNameRu,AT_Type,AT_Category,AT_MTOW,AT_Note,AT_F,AT_C,AT_M,AT_Y,AT_Category_DME');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('157','Airlines','Авиакомпании','30','select * from Airlines order by AL_UTG','AL_PK','AL_NameRu',null,null,null,null,null,'MSSQL@data source=51.250.44.37;User ID=sa;Password=aA12345678$;database=test',null,null,null,null,null,null);
+values ('157','Airlines','Авиакомпании','30','select * from Airlines order by AL_UTG','AL_PK','AL_NameRu',null,null,null,null,null,'MSSQL@data source=51.250.46.206;User ID=sa;Password=aA12345678$;database=test',null,null,null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('167','mftusers','Пользователи','7','select username, pass, orgs, email, description 
-from t_ntusers 
-where username <> ''Admin'' order by  username','username','username',null,null,null,null,null,null,null,null,'p_mtfusers_edit','p_ntusers_del',null,'username,pass,orgs,email,description');
+values ('167','mftusers','Пользователи','7','select username, pass, orgs, email, description from t_ntusers where username <> ''Admin'' order by  username','username','username',null,null,null,null,null,null,null,null,'p_mtfusers_edit','p_ntusers_del',null,'username,pass,orgs,email,description');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('168','querys','Запросы','30','select * from querys order by name /*__external__*/','name','name','152',null,null,null,null,null,null,'querys',null,null,null,null);
+values ('168','querys','Запросы','30','select * from querys order by name /*__external__*/','name','name',null,null,null,null,null,null,null,'querys',null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('169','agents','Агенты','30','select * from v_agents order by ag_id','ag_id','ag_name','183',null,null,null,null,null,'ag_file',null,'p_agents_edit','p_agents_del',null,'ag_id,ag_name,ag_comment,ag_serificate,ag_file');
+values ('169','agents','Заказчики','30','select * from v_agents order by ag_id','ag_id','ag_name','183',null,null,null,null,null,'ag_file',null,'p_agents_edit','p_agents_del',null,'ag_id,ag_name,ag_comment,ag_serificate,ag_file');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('170','AIR','AIR','30','__external__',null,null,null,null,null,null,'1',null,null,null,'p_auto_edit','p_auto_del',null,null);
+values ('170','AIR','Авиакомпании','30','select * from Airlines order by AL_UTG',null,'AL_NameRu',null,null,null,null,'1',null,null,null,null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('171','CHTEST','CHTEST','30','__external__',null,null,null,null,null,null,'15',null,null,null,'p_auto_edit','p_auto_del',null,null);
+values ('171','CHTEST','CHTEST','30','/*__external__*/',null,null,null,null,null,null,'15',null,null,null,'p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('172','PHONES','PHONES','30','__external__',null,null,null,null,null,null,'16',null,null,null,'p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
@@ -169,6 +165,16 @@ insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfiel
 values ('183','querysAccess','Запросы НСИ','30','select * from v_querys where userid = [ag_id] order by name','name','name',null,null,null,null,null,null,null,'querys',null,null,null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('184','querysAccess','Запросы НСИ','1000','select * from querys order by name','name','name',null,null,null,null,null,null,null,'querys',null,null,null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('185','test','test','30','__external__',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('186','TARIF510','TARIF510','30','__external__',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('187','TEST501','TEST501','30','__external__',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('188','MYTEST','MYTEST','30','__external__',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('189','USERQ1','USERQ1','30','__external__',null,null,null,null,null,null,null,null,null,null,'p_auto_edit','p_auto_del',null,null);
 
 insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
 values ('23','t_AccessReport','fullname','fullname',null,null,'FreeAccount',null);
@@ -204,10 +210,6 @@ insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,gr
 values ('32','mftusers','description','name','181',null,'ConnectorsAccess',null);
 insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
 values ('36','agents','ag_serificate','status','182','Bureau.GridCombo','SertifStatus','1');
-insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
-values ('38','agents','agents_query','name','184',null,'querysAccess','1');
-insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
-values ('37','agents','ag_comment','dbname','184','List','querysAccess',null);
 
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindt_AccessReport','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = ""><COLUMN FieldName="account" FieldCaption = "Логин" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="fullname" FieldCaption = "Имя" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="email" FieldCaption = "Комментарий" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="grp" FieldCaption = "GRP" DisplayFormat = "" Width = "100" Visible = "0" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="type" FieldCaption = "Type" DisplayFormat = "" Width = "100" Visible = "0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindt_AccessReport','Sun, 03 Jun 2018 09:51:25 GMT');
@@ -247,8 +249,6 @@ values ('GridFindt_columns','<GRID FROZENCOLS="0" SumFields = "" LabelField = ""
 <COLUMN FieldName="width" FieldCaption="Ширина" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindt_columns','Sat, 23 Jul 2022 02:10:25 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindt_mnMainMenu','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = ""><COLUMN FieldName="idmenu" FieldCaption = "id" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="ordmenu" FieldCaption = "NN" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="caption" FieldCaption = "Путь" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="link" FieldCaption = "На главной форме" DisplayFormat = "" Width = "100" Visible = "0" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="app" FieldCaption = "Приложение" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="link1" FieldCaption = "Компонент" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="mnemo" FieldCaption = "Доступ" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="params" FieldCaption = "Параметры" DisplayFormat = "" Width = "100" Visible = "1" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="web" FieldCaption = "Иконка" DisplayFormat = "" Width = "100" Visible = "0" group = "" Sum = "0"  ColSort="1" /><COLUMN FieldName="silver" FieldCaption = "silver" DisplayFormat = "" Width = "100" Visible = "0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindt_mnMainMenu','Thu, 21 Jul 2022 18:08:09 GMT');
-insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
-values ('GridFindAIR','','GridFindAIR','Wed, 27 Jul 2022 19:08:00 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindt_sysStatusType','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
 <COLUMN FieldName="idstatus" FieldCaption="id" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
@@ -295,6 +295,26 @@ insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindTARIF70','','GridFindTARIF70','Thu, 28 Jul 2022 04:35:10 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindAirlines','','GridFindAirlines','Sun, 31 Jul 2022 08:33:38 GMT');
+insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
+values ('GridFindAIR','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
+<COLUMN FieldName="AL_PK" FieldCaption="AL_PK" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_UTG" FieldCaption="AL_UTG" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_STC" FieldCaption="AL_STC" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_IATA" FieldCaption="IATA" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_ICAO" FieldCaption="ICAO" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_ICAO_Ru" FieldCaption="AL_ICAO_Ru" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_DesCode" FieldCaption="AL_DesCode" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_NameRu" FieldCaption="Название(ru)" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_NameEn" FieldCaption="Название(en)" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_FullNameRu" FieldCaption="AL_FullNameRu" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_FullNameEn" FieldCaption="AL_FullNameEn" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_CityCode" FieldCaption="AL_CityCode" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_IsRegular" FieldCaption="AL_IsRegular" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_IsIntern" FieldCaption="AL_IsIntern" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_Note" FieldCaption="AL_Note" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_Strong" FieldCaption="AL_Strong" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_DME_Code" FieldCaption="AL_DME_Code" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="AL_RF" FieldCaption="AL_RF" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindAIR','Sat, 13 Aug 2022 16:02:13 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindmftusers','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
 <COLUMN FieldName="username" FieldCaption="Логин" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
@@ -391,13 +411,13 @@ values ('2','Driver','FireBird',null,'1',null,null);
 insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
 values ('3','Driver','ClickHouse',null,'2',null,null);
 insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
-values ('5','MSSQL','USMART',null,'0','data source=localhost\SQLEXPRESS8;User ID=sa;Password=aA12345678;database=uFlights',null);
-insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
 values ('4','Driver','PGSQL',null,'3',null,null);
 insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
 values ('6','PGSQL','TARIFS',null,'1','Host=localhost;Username=postgres;Password=aA12345678;Database=uflights',null);
 insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
 values ('7','PGSQL','SERVMAN',null,'2','Host=localhost;Username=postgres;Password=aA12345678;Database=servman',null);
+insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
+values ('5','Connect','Airlines',null,'0','MSSQL@data source=db;User ID=sa;Password=aA12345678$;database=test',null);
 
 ----------------------------------------------------
 select setval('t_mnmainmenu_idmenu_seq', max(idmenu)) from t_mnmainmenu;

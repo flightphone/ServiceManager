@@ -95,47 +95,12 @@ namespace WpfBu.Models
 
         public void UpdateNciData()
         {
-            string apiuri = MainObj.api + "GetAllConnectorsInfo";
-            string nci = GetApi(apiuri);
-            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
-            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
-            string sql = "TRUNCATE table connectors; " +
-            string.Join("\n",
-                 data.Select(d =>
-                 {
-                     string r = $"insert into connectors ({string.Join(",", ConnectorMap.Keys)}) values (" +
-                       string.Join(",", ConnectorMap.Keys.Select(k => $"'{(d[k] ?? "").ToString()}'")) + ");";
-                     return r;
-                 })
-            );
-            apiuri = MainObj.api + "GetAllQueryInfo/Select";
-            nci = GetApi(apiuri);
-            ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
-            data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
-
-            sql = sql + "TRUNCATE table querys; " +
-            string.Join("\n",
-                 data.Select(d =>
-                 {
-                     string r = $"insert into querys ({string.Join(",", QueryMap.Keys)}) values (" +
-                       string.Join(",", QueryMap.Keys.Select(k => $"'{(d[k] ?? "").ToString()}'")) + ");";
-                     return r;
-                 })
-            );
-            sql = sql + "select mft_import();";
-
-            MainObj.Dbutil.ExecSQL(sql, null);
+            return;
         }
 
         public List<Dictionary<string, object>> GetAllConnectorsInfo()
         {
-            /*
-            string apiuri = MainObj.api + "GetAllConnectorsInfo";
-            string nci = GetApi(apiuri);
-            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
-            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCIConn(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
-            return data;
-            */
+
             //Опять Локально 30.07.2022
             string sql = "select * from v_connectors order by name";
             DataTable dt = MainObj.Dbutil.Runsql(sql);
@@ -147,21 +112,7 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetAllQueryInfo()
         {
-            /*
-            string apiuri = MainObj.api + "GetAllQueryInfo";
-            string nci = GetApi(apiuri);
-            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
-            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
-            string sql = "select * from mft_import_query(@list)";
-            string lst = string.Join(",", data.Select(d => d["name"]));
-            var t_rpDeclare = MainObj.Dbutil.DataToJson(MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@list", lst } }));
-            var res = from d in data
-                      join r in t_rpDeclare on d["name"] equals r["decname"]
-                      select (new List<Dictionary<string, object>>() { d, r }).SelectMany(dict => dict)
-                         .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            return res.OrderBy(d => d["name"]).ToList();
-            */
             //Опять Локально 30.07.2022
             string sql = "select * from v_querys order by name";
             DataTable dt = MainObj.Dbutil.Runsql(sql);
@@ -171,9 +122,9 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetUserQueryInfo(string Account)
         {
-            
+
             //Опять Локально 30.07.2022
-            List<Dictionary<string, object>> res = GetAllQueryInfo();                        
+            List<Dictionary<string, object>> res = GetAllQueryInfo();
 
             //Фильтровка
             List<Dictionary<string, object>> resdata;
@@ -192,13 +143,9 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetDataNci(string name)
         {
-            string apiuri = $"{MainObj.api}GetData/{name}";
-            string nci = GetApi(apiuri);
-            NciData ncid = JsonConvert.DeserializeObject<NciData>(nci);
-            List<Dictionary<string, object>> data = ncid.QueryData;
-            if (data == null)
-                data = new List<Dictionary<string, object>> {
-                    new Dictionary<string, object>() {{"Сообщение", "В результате запроса нет данных."}}
+
+            List<Dictionary<string, object>> data = new List<Dictionary<string, object>> {
+                    new Dictionary<string, object>() {{"Error", "Empty"}}
                 };
             return data;
         }
@@ -261,7 +208,7 @@ namespace WpfBu.Models
         }
         public string TestApi()
         {
-            return  GetApi($"{MainObj.api}Test");
+            return GetApi($"{MainObj.api}Test");
         }
         public string GetApi(string apiuri)
         {
@@ -279,17 +226,7 @@ namespace WpfBu.Models
 
         public Dictionary<string, object> AddConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
-            
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            
-            Dictionary<string, object> ncirow = ToNCI(WorkRow, ConnectorMap);
-            string jobj = JsonConvert.SerializeObject(ncirow);
-            string apiuri = $"{MainObj.api}AddConnector?Conn={jobj}";
-
-            DeleteConnector(WorkRow, EditProc);
-            string nci = GetApi(apiuri);
-            
-            
             return WorkRow;
         }
 
@@ -298,35 +235,19 @@ namespace WpfBu.Models
 
             DataTable data = MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
-
-            Dictionary<string, object> ncirow = ToNCI(WorkRow, QueryMap);
-            //Заглушка для теста:
-            ncirow["UserID"] = "123";
-            string jobj = JsonConvert.SerializeObject(ncirow);
-            //string apiuri = $"{MainObj.api}AddQuery?Query={jobj}";
-            string apiuri = $"{MainObj.api}AddQuery/Select?Query={jobj}";
-
-            DeleteQuery(WorkRow, EditProc);
-            string nci = GetApi(apiuri);
-            
             return MainTab[0];
         }
 
         public Dictionary<string, object> DeleteConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
-           
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            string apiuri = $"{MainObj.api}DeleteConnector/{WorkRow["name"].ToString()}";
-            string nci = GetApi(apiuri);
             return WorkRow;
         }
 
         public Dictionary<string, object> DeleteQuery(Dictionary<string, object> WorkRow, string EditProc)
         {
-            
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            string apiuri = $"{MainObj.api}DeleteQuery/Select/{WorkRow["name"].ToString()}";
-            string nci = GetApi(apiuri);
             return WorkRow;
         }
 
