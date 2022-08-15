@@ -150,7 +150,7 @@ namespace ServiceManager.Controllers
             string ConnectionString = MainObj.ConnectionString;
             if (!string.IsNullOrEmpty(IdDeclare))
             {
-                string dsql = "select * from t_rpdeclare where iddeclare = @IdDeclare";
+                string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
                 var t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
                 string dcs = t_rp.Rows[0]["descript"].ToString();
                 if (!string.IsNullOrEmpty(dcs))
