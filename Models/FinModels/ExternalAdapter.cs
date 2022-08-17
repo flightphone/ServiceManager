@@ -59,6 +59,10 @@ namespace WpfBu.Models
 
             if (EditProc == "p_querys_del")
                 return DeleteQuery(WorkRow, EditProc);
+            if (EditProc == "p_auto_edit")
+                return p_auto_edit(EditProc, WorkRow, IdDeclare, Action);
+            if (EditProc == "p_auto_del")
+                return p_auto_del(EditProc, WorkRow, IdDeclare, Action);    
 
             throw new Exception("Не реализовано");
         }
@@ -171,9 +175,9 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetUserQueryInfo(string Account)
         {
-            
+
             //Опять Локально 30.07.2022
-            List<Dictionary<string, object>> res = GetAllQueryInfo();                        
+            List<Dictionary<string, object>> res = GetAllQueryInfo();
 
             //Фильтровка
             List<Dictionary<string, object>> resdata;
@@ -261,7 +265,7 @@ namespace WpfBu.Models
         }
         public string TestApi()
         {
-            return  GetApi($"{MainObj.api}Test");
+            return GetApi($"{MainObj.api}Test");
         }
         public string GetApi(string apiuri)
         {
@@ -277,19 +281,96 @@ namespace WpfBu.Models
             return res;
         }
 
+
         public Dictionary<string, object> AddConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
-            
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
-            
+
             Dictionary<string, object> ncirow = ToNCI(WorkRow, ConnectorMap);
             string jobj = JsonConvert.SerializeObject(ncirow);
             string apiuri = $"{MainObj.api}AddConnector?Conn={jobj}";
 
             DeleteConnector(WorkRow, EditProc);
             string nci = GetApi(apiuri);
-            
-            
+
+
+            return WorkRow;
+        }
+
+        public Dictionary<string, object> p_auto_del(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        {
+            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+            DataRow rd = t_rp.Rows[0];
+            string KeyF = rd["keyfield"].ToString();
+            string DecName = rd["decname"].ToString();
+            string tablename = rd["tablename"].ToString();
+            var CnVal = new { Value = WorkRow[KeyF], Condition = "=" };
+
+            Dictionary<string, object> Condition = new Dictionary<string, object>(){
+                    {KeyF, CnVal}
+                };
+            string where = JsonConvert.SerializeObject(Condition);
+            string apiuri = $"{MainObj.api}ExtQuery/{tablename}/delete?Condition={where}";
+            string nci = GetApi(apiuri);
+            NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
+            if (Err.ErrorCode != 0)
+                throw new Exception($"Ошибка: {Err.ErrorCode}");
+
+            return WorkRow;
+        }
+
+
+        public Dictionary<string, object> p_auto_edit(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        {
+            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+            DataRow rd = t_rp.Rows[0];
+            string KeyF = rd["keyfield"].ToString();
+            string DecName = rd["decname"].ToString();
+            string tablename = rd["tablename"].ToString();
+            Dictionary<string, object> send = new Dictionary<string, object>();
+            foreach (string key in WorkRow.Keys)
+            {
+                if (Action == "edit" && key == KeyF)
+                    continue;
+                string val = (WorkRow[key] ?? "").ToString();
+                if (string.IsNullOrEmpty(val))
+                {
+                    if (key == KeyF)
+                        continue;
+                    send.Add(key, null);
+                    continue;
+                }
+                DateTime dval;
+                if (DateTime.TryParse(val, out dval))
+                    send.Add(key, dval.ToString("yyyy-MM-dd"));
+                else
+                    send.Add(key, WorkRow[key]);
+            }
+            string vals = JsonConvert.SerializeObject(send);
+            string nci = "";
+            if (Action == "edit")
+            {
+                var CnVal = new { Value = WorkRow[KeyF], Condition = "=" };
+                Dictionary<string, object> Condition = new Dictionary<string, object>(){
+                    {KeyF, CnVal}
+                };
+                string where = JsonConvert.SerializeObject(Condition);
+                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?Condition={where}&UpdateValue={vals}";
+                nci = GetApi(apiuri);
+            }
+            else
+            {
+                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?InsertValue={vals}";
+                nci = GetApi(apiuri);
+            }
+            NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
+            if (Err.ErrorCode != 0)
+                throw new Exception($"Ошибка: {Err.ErrorCode}");
+
+
             return WorkRow;
         }
 
@@ -308,13 +389,13 @@ namespace WpfBu.Models
 
             DeleteQuery(WorkRow, EditProc);
             string nci = GetApi(apiuri);
-            
+
             return MainTab[0];
         }
 
         public Dictionary<string, object> DeleteConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
-           
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             string apiuri = $"{MainObj.api}DeleteConnector/{WorkRow["name"].ToString()}";
             string nci = GetApi(apiuri);
@@ -323,7 +404,7 @@ namespace WpfBu.Models
 
         public Dictionary<string, object> DeleteQuery(Dictionary<string, object> WorkRow, string EditProc)
         {
-            
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             string apiuri = $"{MainObj.api}DeleteQuery/Select/{WorkRow["name"].ToString()}";
             string nci = GetApi(apiuri);

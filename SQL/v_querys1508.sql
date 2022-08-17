@@ -1,14 +1,14 @@
-drop FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying);
+drop FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50));
+--drop FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50), _savefieldlist varchar);
+drop view v_querys;
 
-
-CREATE OR REPLACE VIEW public.v_querys AS
+CREATE VIEW public.v_querys AS
  SELECT q.name,
     e.userid2 AS userid,
     q.command,
     q.dbconnectorname,
-    d.iddeclare,
     a.ag_name,
-    d.keyfield
+    d.*
 
    FROM querys q
      JOIN t_rpdeclare d ON q.name::text = d.decname::text
@@ -20,7 +20,7 @@ ALTER TABLE public.v_querys
 
 --select * from v_querys    
 
-CREATE FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50))
+CREATE FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50), _savefieldlist varchar, _tablename varchar)
     RETURNS SETOF v_querys 
     LANGUAGE 'plpgsql'
     COST 100.0
@@ -62,11 +62,16 @@ AS $BODY$
   set userid2 = _userid
   where qu_name = _name;
 
-  update t_rpdeclare set keyfield = _keyfield where decname = _name;
+  update t_rpdeclare 
+  set keyfield = _keyfield,
+      savefieldlist = _savefieldlist,
+      tablename = _tablename
+
+  where decname = _name;
   return query select * from v_querys where name = _name;
 end;
 
 $BODY$;
 
-ALTER FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50))
+ALTER FUNCTION public.p_querys_edit(_name character varying, _userid integer, _command character varying, _dbconnectorname character varying, _keyfield varchar(50), _savefieldlist varchar, _tablename varchar)
     OWNER TO postgres;
