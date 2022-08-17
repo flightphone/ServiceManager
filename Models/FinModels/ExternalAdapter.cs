@@ -306,6 +306,10 @@ namespace WpfBu.Models
             string KeyF = rd["keyfield"].ToString();
             string DecName = rd["decname"].ToString();
             string tablename = rd["tablename"].ToString();
+
+            if (string.IsNullOrEmpty(KeyF))
+                KeyF = WorkRow.Keys.First();
+
             var CnVal = new { Value = WorkRow[KeyF], Condition = "=" };
 
             Dictionary<string, object> Condition = new Dictionary<string, object>(){
@@ -330,6 +334,10 @@ namespace WpfBu.Models
             string KeyF = rd["keyfield"].ToString();
             string DecName = rd["decname"].ToString();
             string tablename = rd["tablename"].ToString();
+
+            if (string.IsNullOrEmpty(KeyF))
+                KeyF = WorkRow.Keys.First();
+                
             Dictionary<string, object> send = new Dictionary<string, object>();
             foreach (string key in WorkRow.Keys)
             {
