@@ -176,7 +176,7 @@ namespace WpfBu.Models
             return data;
         }
 
-        bool DateTimeTryParse(string s, out DateTime dval)
+        public bool DateTimeTryParse(string s, out DateTime dval)
         {
             dval = DateTime.Now;
             try

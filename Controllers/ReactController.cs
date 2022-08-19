@@ -222,7 +222,7 @@ namespace ServiceManager.Controllers
                 {
                     DateTime dval;
                     string val = F.SQLParams[k].ToString();
-                    if (DateTime.TryParse(val, out dval))
+                    if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
                     {
                         parseParam.Add(k, dval);
                     }
@@ -276,7 +276,7 @@ namespace ServiceManager.Controllers
                 {
                     DateTime dval;
                     string val = F.SQLParams[k].ToString();
-                    if (DateTime.TryParse(val, out dval))
+                    if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
                     {
                         parseParam.Add(k, dval);
                     }
