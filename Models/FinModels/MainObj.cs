@@ -175,6 +175,17 @@ namespace WpfBu.Models
             return data;
         }
 
+        object parseval(object o)
+        {
+            string pval = (o ?? "").ToString();
+            DateTime dval;
+            if (DateTime.TryParse(pval, out dval))
+            {
+                return dval;
+            }
+            else
+                return o;
+        }
         public DataTable Runsql(string sql, Dictionary<string, object> par, string Driver = "", string ConnectionString = "")
         {
             if (String.IsNullOrEmpty(Driver))
@@ -190,7 +201,9 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                        {
+                            da.SelectCommand.Parameters.AddWithValue(s, parseval(par[s]));
+                        }
                 da.Fill(data);
             }
             else
@@ -201,7 +214,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                            da.SelectCommand.Parameters.AddWithValue(s, parseval(par[s]));
                 da.Fill(data);
             }
 
@@ -226,7 +239,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             cmd.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            cmd.Parameters.AddWithValue(s, par[s]);
+                            cmd.Parameters.AddWithValue(s, parseval(par[s]));
                 cn.Open();
                 cmd.ExecuteNonQuery();
                 cn.Close();
@@ -240,7 +253,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             cmd.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            cmd.Parameters.AddWithValue(s, par[s]);
+                            cmd.Parameters.AddWithValue(s, parseval(par[s]));
                 cn.Open();
                 cmd.ExecuteNonQuery();
                 cn.Close();

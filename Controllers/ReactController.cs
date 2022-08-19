@@ -364,12 +364,12 @@ namespace ServiceManager.Controllers
                     }
                 }
                 */
-
-                for (int i = n; i < 8; i++)
-                {
-                    Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
-                    res.Add(r);
-                }
+                if (n > 0)
+                    for (int i = n; i < 8; i++)
+                    {
+                        Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
+                        res.Add(r);
+                    }
                 return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList(), Error = message, Admin = adm });
             }
             catch (Exception e)
