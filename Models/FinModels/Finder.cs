@@ -448,7 +448,7 @@ namespace WpfBu.Models
             if (!string.IsNullOrEmpty(OrdField))
                 decSQL = decSQL + " order by " + OrdField;
             sql = decSQL;
-            var data = MainObj.Dbutil.Runsql(sql, SQLParams);
+            var data = MainObj.Dbutil.Runsql(sql, SQLParams, Driver, ConnectionString);
 
             return data;
         }
