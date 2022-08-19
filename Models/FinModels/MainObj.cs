@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Data.SqlClient;
+using System.Globalization;
 
 
 namespace WpfBu.Models
@@ -179,7 +180,8 @@ namespace WpfBu.Models
         {
             string pval = (o ?? "").ToString();
             DateTime dval;
-            if (DateTime.TryParse(pval, out dval))
+            if (DateTime.TryParseExact(pval, "dd.MM.yyyy", new CultureInfo("ru-RU"),
+                            DateTimeStyles.None, out dval))
             {
                 return dval;
             }
