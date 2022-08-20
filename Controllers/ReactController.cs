@@ -306,9 +306,7 @@ namespace ServiceManager.Controllers
 
         public JsonResult Banner()
         {
-            //try
-            //{
-
+            
             string account = User.Identity.Name;
             if (string.IsNullOrEmpty(account))
                 account = "sa";
@@ -332,38 +330,20 @@ namespace ServiceManager.Controllers
                 {
                     message = e.Message;
                 }
-                var data = ea.GetUserQueryInfo(account);
-
-                n = Math.Min(8, data.Count());
+                var sql = "select a.* from fn_mainmenu('ALL', @Account) a where ordmenu < 1000000  order by ordmenu limit 8";
+                DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
+                n = Math.Min(8, data.Rows.Count);
                 for (int i = 0; i < n; i++)
                 {
-                    var Rows = data[i];
                     Dictionary<string, string> r = new Dictionary<string, string>() {
-                            {"id", $"{Rows["iddeclare"].ToString()}_query"},
-                            {"iddeclare", Rows["iddeclare"].ToString()},
-                            {"text", Rows["name"].ToString()}
-                        };
-                    res.Add(r);
-                }
-                /*
-                }
-                catch
-                {
-                    //common banner
-                    var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
-                    DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
-                    n = Math.Min(8, data.Rows.Count);
-                    for (int i = 0; i < n; i++)
-                    {
-                        Dictionary<string, string> r = new Dictionary<string, string>() {
                             {"id", data.Rows[i]["idmenu"].ToString()},
                             {"iddeclare", data.Rows[i]["params"].ToString()},
-                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
+                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()},
+                            {"link1", data.Rows[i]["link1"].ToString()}
                         };
-                        res.Add(r);
-                    }
-                }
-                */
+                    res.Add(r);
+                }                
+
                 if (n > 0)
                     for (int i = n; i < 8; i++)
                     {
