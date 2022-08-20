@@ -84,7 +84,7 @@ namespace WpfBu.Models
             if (string.IsNullOrEmpty(F.Account))
                 F.Account = "sa";
             F.nrows = 30;
-            F.Mode = "data";
+            F.Mode = "new";
             F.AutoCreateColumns = false;
             F.start(IdDeclare);
             Fcols = F.Fcols;

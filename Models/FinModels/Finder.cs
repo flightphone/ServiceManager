@@ -288,7 +288,7 @@ namespace WpfBu.Models
         #region startinit
         public virtual void CreateEditor()
         {
-            if (!string.IsNullOrEmpty(EditProc) && !OKFun)
+            if (!string.IsNullOrEmpty(EditProc) && !OKFun && Fcols != null)
             {
                 ReferEdit = new Editor();
                 ReferEdit.start(this);
