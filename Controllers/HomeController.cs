@@ -67,6 +67,7 @@ namespace ServiceManager.Controllers
                     {
                         ModelState.AddModelError("", "Ошибка доступа");
                         model.Error = "Ошибка доступа";
+                        
                         return View("Confirm", model);
                     }
                     else
