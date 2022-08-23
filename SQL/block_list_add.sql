@@ -9,9 +9,10 @@ create table blacklist
 
 create index indx_date on blacklist (block_date_time);
 
-create view v_blacklist
+create or replace view v_blacklist
 AS
-select card_number::text card_number, block_date_time, unblock_date_time, reason from blacklist;
+select card_number::text card_number, block_date_time, unblock_date_time, reason, card_number c_number from blacklist;
+
 
 create function p_blacklist_edit
 
