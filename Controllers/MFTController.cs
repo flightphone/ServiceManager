@@ -26,8 +26,6 @@ namespace ServiceManager.Controllers
             //byte[] buf = Encoding.UTF8.GetBytes(res);
             byte[] buf = Encoding.GetEncoding("windows-1251").GetBytes(res);
             return File(buf, ctype, filename);
-            
-                
         }
     }
 }
