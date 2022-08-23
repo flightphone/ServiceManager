@@ -112,9 +112,12 @@ namespace ServiceManager.Controllers
             }
 
         }
-        public JsonResult exec(string EditProc, string SQLParams, string KeyF, string IdDeclare, string mode)
+        public JsonResult exec(string EditProc, string SQLParams, string KeyF, string IdDeclare, string mode, string OldValue)
         {
             Dictionary<string, object> WorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(SQLParams);
+            Dictionary<string, object> OldWorkRow = null;
+            if (!string.IsNullOrEmpty(OldValue))
+                OldWorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(OldValue);
             string message = "OK";
             ExternalAdapter ea = new ExternalAdapter();
             if (ea.procedures.Contains(EditProc))
@@ -123,7 +126,7 @@ namespace ServiceManager.Controllers
                 try
                 {
 
-                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow, IdDeclare, mode);
+                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow, IdDeclare, mode, OldWorkRow);
                     List<string> ColumnTab = new List<string>();
                     ColumnTab.AddRange(MainTab.Keys);
                     return Json(new
@@ -306,7 +309,7 @@ namespace ServiceManager.Controllers
 
         public JsonResult Banner()
         {
-            
+
             string account = User.Identity.Name;
             if (string.IsNullOrEmpty(account))
                 account = "sa";
@@ -342,7 +345,7 @@ namespace ServiceManager.Controllers
                             {"link1", data.Rows[i]["link1"].ToString()}
                         };
                     res.Add(r);
-                }                
+                }
 
                 if (n > 0)
                     for (int i = n; i < 8; i++)

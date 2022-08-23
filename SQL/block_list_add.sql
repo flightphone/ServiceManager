@@ -1,3 +1,4 @@
+/*
 create table blacklist
 (
    card_number int8 primary key,
@@ -5,7 +6,7 @@ create table blacklist
    unblock_date_time TIMESTAMP,
    reason int4
 );
-
+*/
 
 create index indx_date on blacklist (block_date_time);
 

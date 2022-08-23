@@ -25,7 +25,7 @@ namespace WpfBu.Models
         public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account, string DecName);
         public List<string> procedures { get; set; }
 
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action);
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action,Dictionary<string, object> OldWorkRow);
     }
 
     // /*__external__*/
@@ -45,7 +45,7 @@ namespace WpfBu.Models
                 "p_auto_del"
                 };
         }
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action, Dictionary<string, object> OldWorkRow)
         {
             //внешние процедуры insert/update/delete 21/07/2022
             if (EditProc == "p_connectors_edit")
@@ -60,9 +60,9 @@ namespace WpfBu.Models
             if (EditProc == "p_querys_del")
                 return DeleteQuery(WorkRow, EditProc);
             if (EditProc == "p_auto_edit")
-                return p_auto_edit(EditProc, WorkRow, IdDeclare, Action);
+                return p_auto_edit(EditProc, WorkRow, IdDeclare, Action, OldWorkRow);
             if (EditProc == "p_auto_del")
-                return p_auto_del(EditProc, WorkRow, IdDeclare, Action);    
+                return p_auto_del(EditProc, OldWorkRow, IdDeclare, Action);    
 
             throw new Exception("Не реализовано");
         }
@@ -303,20 +303,11 @@ namespace WpfBu.Models
             string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
             DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
             DataRow rd = t_rp.Rows[0];
-            string KeyF = rd["keyfield"].ToString();
-            string DecName = rd["decname"].ToString();
+            //string KeyF = rd["keyfield"].ToString();
+            //string DecName = rd["decname"].ToString();
             string tablename = rd["tablename"].ToString();
-
-            if (string.IsNullOrEmpty(KeyF))
-                KeyF = WorkRow.Keys.First();
-
-            var CnVal = new { Value = WorkRow[KeyF], Condition = "=" };
-
-            Dictionary<string, object> Condition = new Dictionary<string, object>(){
-                    {KeyF, CnVal}
-                };
-            string where = JsonConvert.SerializeObject(Condition);
-            string apiuri = $"{MainObj.api}ExtQuery/{tablename}/delete?Condition={where}";
+            string where = prepareRow(WorkRow, "old");
+            string apiuri = $"{MainObj.api}ExtQuery/{tablename}/delete?OldValue={where}";
             string nci = GetApi(apiuri);
             NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
             if (Err.ErrorCode != 0)
@@ -325,48 +316,43 @@ namespace WpfBu.Models
             return WorkRow;
         }
 
-
-        public Dictionary<string, object> p_auto_edit(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        public string prepareRow(Dictionary<string, object> WorkRow, string mode)
         {
-            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
-            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
-            DataRow rd = t_rp.Rows[0];
-            string KeyF = rd["keyfield"].ToString();
-            string DecName = rd["decname"].ToString();
-            string tablename = rd["tablename"].ToString();
-
-            if (string.IsNullOrEmpty(KeyF))
-                KeyF = WorkRow.Keys.First();
-                
             Dictionary<string, object> send = new Dictionary<string, object>();
             foreach (string key in WorkRow.Keys)
             {
-                if (Action == "edit" && key == KeyF)
-                    continue;
                 string val = (WorkRow[key] ?? "").ToString();
                 if (string.IsNullOrEmpty(val))
                 {
-                    if (key == KeyF)
-                        continue;
-                    send.Add(key, null);
+                    if (mode == "new")
+                        send.Add(key, null);
                     continue;
                 }
                 DateTime dval;
-                if (DateTime.TryParse(val, out dval))
-                    send.Add(key, dval.ToString("yyyy-MM-dd"));
+                if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
+                    send.Add(key, dval.ToString("yyyy-MM-dd HH:mm"));
                 else
                     send.Add(key, WorkRow[key]);
             }
             string vals = JsonConvert.SerializeObject(send);
+            return vals;
+        }
+
+        public Dictionary<string, object> p_auto_edit(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action, Dictionary<string, object> OldWorkRow)
+        {
+            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+            DataRow rd = t_rp.Rows[0];
+            //string KeyF = rd["keyfield"].ToString();
+            //string DecName = rd["decname"].ToString();
+            string tablename = rd["tablename"].ToString();
+            string vals = prepareRow(WorkRow, "new");
+
             string nci = "";
             if (Action == "edit")
             {
-                var CnVal = new { Value = WorkRow[KeyF], Condition = "=" };
-                Dictionary<string, object> Condition = new Dictionary<string, object>(){
-                    {KeyF, CnVal}
-                };
-                string where = JsonConvert.SerializeObject(Condition);
-                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?Condition={where}&UpdateValue={vals}";
+                string olds = prepareRow(OldWorkRow, "old");
+                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?OldValue={olds}&NewValue={vals}";
                 nci = GetApi(apiuri);
             }
             else
