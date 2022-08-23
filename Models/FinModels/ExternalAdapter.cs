@@ -311,7 +311,7 @@ namespace WpfBu.Models
             string nci = GetApi(apiuri);
             NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
             if (Err.ErrorCode != 0)
-                throw new Exception($"Ошибка: {Err.ErrorCode}");
+                throw new Exception($"Ошибка: {apiuri}");
 
             return WorkRow;
         }
@@ -349,20 +349,21 @@ namespace WpfBu.Models
             string vals = prepareRow(WorkRow, "new");
 
             string nci = "";
+            string apiuri = "";
             if (Action == "edit")
             {
                 string olds = prepareRow(OldWorkRow, "old");
-                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?OldValue={olds}&NewValue={vals}";
+                apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?OldValue={olds}&NewValue={vals}";
                 nci = GetApi(apiuri);
             }
             else
             {
-                string apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?InsertValue={vals}";
+                apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?InsertValue={vals}";
                 nci = GetApi(apiuri);
             }
             NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
             if (Err.ErrorCode != 0)
-                throw new Exception($"Ошибка: {Err.ErrorCode}");
+                throw new Exception($"Ошибка: {apiuri}");
 
 
             return WorkRow;

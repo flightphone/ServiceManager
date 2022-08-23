@@ -5,7 +5,7 @@ create table dnload_history
     dh_len int
 );
 
-create function dnload_history_insert (_dh_len4 int)
+create or replace function dnload_history_insert (_dh_len4 int)
 returns int 
 AS
 $$
@@ -15,9 +15,9 @@ begin
     _id_dh:= nextval('dnload_history_id_dh_seq'::regclass);
     insert into dnload_history(id_dh, dh_date, dh_len)
     values (_id_dh, current_timestamp, _dh_len4);
-    select (_id_dh % 1000)::int4 a;
+    return ((_id_dh % 1000)::int4);
 end;    
 $$ language plpgsql;
 
-
-select ;
+select * from dnload_history
+select dnload_history_insert(5000);
