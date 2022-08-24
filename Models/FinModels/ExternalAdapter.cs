@@ -358,7 +358,7 @@ namespace WpfBu.Models
             }
             else
             {
-                apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?InsertValue={vals}";
+                apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?NewValue={vals}";
                 nci = GetApi(apiuri);
             }
             NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
