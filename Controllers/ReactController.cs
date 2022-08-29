@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Npgsql;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ServiceManager.Controllers
 {
@@ -307,6 +308,24 @@ namespace ServiceManager.Controllers
 
         }
 
+        private async void UpdateNCI()
+        {
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    ExternalAdapter ea = new ExternalAdapter();
+                    //ea.TestApi();
+                    ea.UpdateNciData(); //Во время отладки не обновляем
+                }
+                catch
+                { }
+                return;
+            });
+
+        }
+
         public JsonResult Banner()
         {
 
@@ -320,13 +339,12 @@ namespace ServiceManager.Controllers
             try
             {
                 //mtf banner
-                ExternalAdapter ea = new ExternalAdapter();
+
                 string message = "OK";
                 bool adm = false;
                 try
                 {
-                    ea.TestApi();
-                    ea.UpdateNciData(); //Во время отладки не обновляем
+                    UpdateNCI(); 
                     adm = MainObj.CheckAccess("Administrators", account);
                 }
                 catch (Exception e)
