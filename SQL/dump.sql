@@ -67,6 +67,8 @@ insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('BlackListOperators','User2','User2','User2','0','75079c8c-1f8d-11ed-b2b2-175b3f205925');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Списки значений','Administrators','Administrators','Группа AD','4','8ef15bea-2061-11ed-aa04-97edb785fd3c');
+insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
+values ('report','Administrators','Administrators','Группа AD','4','0f1265e0-22dc-11ed-a195-dbaf50934c35');
 
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('110','110','Авиакомпании',null,'ALL','Bureau.Finder','Авиакомпании','170',null,null);
@@ -83,7 +85,11 @@ values ('107','830','Управление НСИ/Пользователи',null,
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('111','850','Управление ЧС/Черный список',null,'ALL','Bureau.Finder','blacklist','173',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
-values ('112','851','Управление ЧС/Файл ЧС',null,'ALL','/MFT/dnload?id=5000','blacklist',null,null,null);
+values ('114','851','Управление ЧС/Разностный список',null,'ALL','Bureau.Finder','blacklist','194',null,null);
+insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
+values ('112','890','Управление ЧС/Файл ЧС',null,'ALL','/MFT/dnload?id=5000','blacklist',null,null,null);
+insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
+values ('113','900','Управление отчетами ЦОТ',null,'ALL',null,'report',null,null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('19','1000','Администрирование/Пользователи','1','ALL','Bureau.Finder','Пользователи','120',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
@@ -166,7 +172,7 @@ values ('171','CHTEST','CHTEST','30','/*__external__*/',null,null,null,null,null
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('172','PHONES','PHONES','30','__external__',null,null,null,null,null,null,'16',null,null,null,'p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('173','PSG2','Черный список','50','select * from v_blacklist where block_date_time between @datestart::timestamp and @datefinish::timestamp order by block_date_time, c_number','card_number','card_number',null,null,null,'192',null,'MFT',null,null,'p_blacklist_edit','p_blacklist_del',null,'card_number,block_date_time,unblock_date_time,reason');
+values ('173','PSG2','Черный список','50','select * from v_blacklist where block_date_time between @datestart::timestamp and @datefinish::timestamp order by c_number','card_number','card_number',null,null,null,'192',null,'MFT',null,null,'p_blacklist_edit','p_blacklist_del',null,'card_number,block_date_time,unblock_date_time,reason,priority');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('174','TARIF','TARIF','30','__external__',null,null,null,null,null,null,'15',null,null,'ServiceTariff','p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
@@ -207,6 +213,8 @@ insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfiel
 values ('192','dateparam','Диапазон дат','30','select * from v_dateparam','datestart','datestart',null,null,null,null,null,null,null,null,'edit',null,null,'datestart,datefinish');
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('193','PSG','PSG','30','__external__',null,null,null,null,null,null,null,null,null,'PUBLIC.BLACKLIST','p_auto_edit','p_auto_del',null,null);
+insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
+values ('194','PSG3','Разностный список','50','select a.* from (SELECT card_number::text AS card_number, block_date_time, create_date_time, reason, card_number AS c_number from blacklistdelta) a order by a.c_number','card_number','card_number',null,null,null,null,null,'MFT',null,null,null,null,null,null);
 
 insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
 values ('23','t_AccessReport','fullname','fullname',null,null,'FreeAccount',null);
@@ -351,6 +359,14 @@ values ('GridFindAIR','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" Label
 <COLUMN FieldName="AL_DME_Code" FieldCaption="AL_DME_Code" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
 <COLUMN FieldName="AL_RF" FieldCaption="AL_RF" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindAIR','Mon, 15 Aug 2022 20:14:09 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
+values ('GridFindPSG2','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
+<COLUMN FieldName="card_number" FieldCaption="Номер карты" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="block_date_time" FieldCaption="Дата блокировки" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="unblock_date_time" FieldCaption="Дата разблокирования" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="reason" FieldCaption="Код" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="c_number" FieldCaption="c_number" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="priority" FieldCaption="priority" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindPSG2','Wed, 24 Aug 2022 06:57:02 GMT');
+insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindmftusers','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
 <COLUMN FieldName="username" FieldCaption="Логин" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
 <COLUMN FieldName="pass" FieldCaption="Пароль" DisplayFormat="password" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
@@ -461,18 +477,19 @@ values ('GridFindquerys','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" La
 <COLUMN FieldName="decname" FieldCaption="decname" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" />
 <COLUMN FieldName="descr" FieldCaption="descr" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindquerys','Wed, 17 Aug 2022 04:34:37 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
-values ('GridFindPSG2','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
-<COLUMN FieldName="card_number" FieldCaption="Номер карты" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
-<COLUMN FieldName="block_date_time" FieldCaption="Дата блокировки" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
-<COLUMN FieldName="unblock_date_time" FieldCaption="Дата разблокирования" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
-<COLUMN FieldName="reason" FieldCaption="Код" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
-<COLUMN FieldName="c_number" FieldCaption="c_number" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindPSG2','Tue, 23 Aug 2022 06:57:25 GMT');
+values ('GridFindPSG3','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
+<COLUMN FieldName="card_number" FieldCaption="card_number" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="block_date_time" FieldCaption="block_date_time" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="create_date_time" FieldCaption="create_date_time" DisplayFormat="dd.MM.yyyy HH:mm" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="reason" FieldCaption="reason" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="c_number" FieldCaption="c_number" DisplayFormat="" Width="100" Visible="0" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindPSG3','Thu, 01 Sep 2022 11:49:52 GMT');
 insert into t_sysparams(paramname,paramvalue,paramdescription,dateparam)
 values ('GridFindPSG','<GRID FROZENCOLS="0" SumFields = "" LabelField = "" LabelText = "">
 <COLUMN FieldName="card_number" FieldCaption="card_number" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
 <COLUMN FieldName="block_date_time" FieldCaption="block_date_time" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
 <COLUMN FieldName="unblock_date_time" FieldCaption="unblock_date_time" DisplayFormat="dd.MM.yyyy" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
-<COLUMN FieldName="reason" FieldCaption="reason" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindPSG','Mon, 22 Aug 2022 11:29:59 GMT');
+<COLUMN FieldName="reason" FieldCaption="reason" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" />
+<COLUMN FieldName="priority" FieldCaption="priority" DisplayFormat="" Width="100" Visible="1" group = "" Sum = "0"  ColSort="1" /><SAFEDEF SAFEDEF="1"/></GRID>','GridFindPSG','Wed, 24 Aug 2022 06:04:25 GMT');
 
 insert into t_sysstatus(idstatus,statustype,statusname,color,sortorder,comment,image_bmp)
 values ('1','Driver','MSSQL',null,'0',null,null);
