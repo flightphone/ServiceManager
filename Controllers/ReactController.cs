@@ -17,19 +17,6 @@ namespace ServiceManager.Controllers
     [Authorize]
     public class ReactController : Controller
     {
-        public JsonResult TestApi(string id)
-        {
-            try
-            {
-                ExternalAdapter ea = new ExternalAdapter();
-                ea.TestApi();
-                return Json(new { Error = "OK" });
-            }
-            catch (Exception e)
-            {
-                return Json(new { Error = $"Ошибка: {e.Message}" });
-            }
-        }
         public JsonResult ClearColumn(string id)
         {
             try

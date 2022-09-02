@@ -134,4 +134,108 @@ $$ language plpgsql;
 
 
 
+create or replace function p_blacklistdelta_edit
+
+(
+
+_card_number int8
+
+,_block_date_time timestamp DEFAULT null
+
+,_create_date_time timestamp DEFAULT null
+
+,_reason int4 DEFAULT null
+
+
+
+ )
+
+ returns setof blacklistdelta
+
+ as
+
+ $$
+
+ begin
+
+ _create_date_time := COALESCE(_create_date_time, LOCALTIMESTAMP);
+ if exists(select card_number from blacklistdelta where card_number = _card_number) then
+
+    update blacklistdelta
+
+	set 
+
+        block_date_time = _block_date_time 
+
+        ,create_date_time = _create_date_time
+
+        ,reason = _reason
+
+            
+
+    where	
+
+	    card_number = _card_number;
+
+ else
+
+   insert into blacklistdelta(
+
+        card_number
+
+        ,block_date_time 
+
+        ,create_date_time 
+
+        ,reason 
+
+            
+
+	) 
+
+   values (
+
+        _card_number
+
+        ,_block_date_time
+
+        ,_create_date_time
+
+        ,_reason
+
+             
+
+	  );
+
+ end if;
+
+  return query select * from blacklistdelta where card_number = _card_number;
+
+end;
+
+$$ language plpgsql;
+
+
+
+
+
+create function p_blacklistdelta_del (_card_number int8)
+
+returns void
+
+as
+
+$$
+
+begin
+
+   delete from blacklistdelta where card_number = _card_number;
+
+end;
+
+$$ language plpgsql;
+
+
+
+
 

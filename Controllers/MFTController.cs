@@ -18,7 +18,21 @@ namespace ServiceManager.Controllers
     [Authorize]
     public class MFTController : Controller
     {
-        public ActionResult dnload(int id)
+        public JsonResult TestApi(string id)
+        {
+            try
+            {
+                ExternalAdapter ea = new ExternalAdapter();
+                ea.TestApi();
+                return Json(new { Error = "OK" });
+            }
+            catch (Exception e)
+            {
+                return Json(new { Error = $"Ошибка: {e.Message}" });
+            }
+        }
+
+        public ActionResult dnload(int id, string blacktype)
         {
             string filename = $"BlackList.dat";
             string ctype = "application/octet-stream";
@@ -30,7 +44,9 @@ namespace ServiceManager.Controllers
             sql = "select dnload_history_insert(@id)";
             dt = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@id", id}});
             string version = dt.Rows[0][0].ToString();
-            sql = $"select c_number from v_blacklist order by c_number limit {id}";
+            sql = $"select card_number from blacklist order by card_number limit {id}";
+            if (blacktype == "delta")
+                sql = $"select card_number from blacklistdelta order by card_number limit {id}";
             dt = MainObj.Dbutil.Runsql(sql, Driver, ConnectionString);
 
             List<string> res = new List<string>() { "[HEADER]" };

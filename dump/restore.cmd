@@ -1,1 +1,0 @@
-"D:\Program Files\PostgreSQL\9.6\bin\pg_restore.exe" --dbname=servman2 --host=localhost --username=postgres --clean --if-exists --format=custom servman.dump

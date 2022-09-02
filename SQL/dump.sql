@@ -10,8 +10,6 @@ truncate table t_sysstatus;
 ----------------------------------------------------
 
 insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
-values ('sa',null,'Airlines,local','Operators','1',null,null,null);
-insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
 values ('Guest','Guest123','local','Guests','Guest',null,null,null);
 insert into t_ntusers(username,fullname,description,orgs,pass,email,icq,skype)
 values ('Admin','Admin',null,null,'123',null,null,null);
@@ -45,8 +43,6 @@ insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Агенты','Guests','Guests','Группа AD','4','9b6f4cf0-1b1c-11ed-8504-3b51dc5b21f6');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Авиакомпании','Guests','Guests','Группа AD','4','e87daaae-1b1d-11ed-87cb-eb73a758c367');
-insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
-values ('Operators','sa','sa','sa','0','062e7c78-1bc7-11ed-b515-0338490a2dc9');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
 values ('Guests','Guest','Guest','Guest','0','1dc588c2-1bc7-11ed-b518-7b0d9a757105');
 insert into t_accessreport(grp,account,fullname,email,type,ac_pk)
@@ -88,6 +84,8 @@ insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,
 values ('114','851','Управление ЧС/Разностный список',null,'ALL','Bureau.Finder','blacklist','194',null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('112','890','Управление ЧС/Файл ЧС',null,'ALL','/MFT/dnload?id=5000','blacklist',null,null,null);
+insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
+values ('115','891','Управление ЧС/Файл ЧС (разностный)',null,'ALL','/MFT/dnload?id=5000&blacktype=delta','blacklist',null,null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
 values ('113','900','Управление отчетами ЦОТ',null,'ALL',null,'report',null,null,null);
 insert into t_mnmainmenu(idmenu,ordmenu,caption,link,app,link1,mnemo,params,web,silver)
@@ -214,7 +212,7 @@ values ('192','dateparam','Диапазон дат','30','select * from v_datepa
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
 values ('193','PSG','PSG','30','__external__',null,null,null,null,null,null,null,null,null,'PUBLIC.BLACKLIST','p_auto_edit','p_auto_del',null,null);
 insert into t_rpdeclare(iddeclare,decname,descr,dectype,decsql,keyfield,dispfield,keyvalue,dispvalue,keyparamname,dispparamname,isbasename,descript,addkeys,tablename,editproc,delproc,image_bmp,savefieldlist)
-values ('194','PSG3','Разностный список','50','select a.* from (SELECT card_number::text AS card_number, block_date_time, create_date_time, reason, card_number AS c_number from blacklistdelta) a order by a.c_number','card_number','card_number',null,null,null,null,null,'MFT',null,null,null,null,null,null);
+values ('194','PSG3','Разностный список','50','select a.* from (SELECT card_number::text AS card_number, block_date_time, create_date_time, reason, card_number AS c_number from blacklistdelta) a order by a.c_number','card_number','card_number',null,null,null,null,null,'MFT',null,null,'p_blacklistdelta_edit','p_blacklistdelta_del',null,'card_number,block_date_time,create_date_time,reason');
 
 insert into t_sysfieldmap(idmap,decname,dstfield,srcfield,iddeclare,classname,groupdec,keyfield)
 values ('23','t_AccessReport','fullname','fullname',null,null,'FreeAccount',null);
