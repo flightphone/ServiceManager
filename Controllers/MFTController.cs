@@ -34,40 +34,49 @@ namespace ServiceManager.Controllers
 
         public ActionResult dnload(string blacktype)
         {
-            string filename = $"BlackList.dat";
-            string ctype = "application/octet-stream";
-            string sql = "select comment from t_sysstatus where statustype = 'Connect' and statusname = 'MFT'";
-            DataTable dt = MainObj.Dbutil.Runsql(sql);
-            string Driver = "PGSQL";
-            string ConnectionString = dt.Rows[0][0].ToString().Split("@")[1];
+            try
+            {
+                string filename = $"BlackList.dat";
+                string ctype = "application/octet-stream";
+                string sql = "select comment from t_sysstatus where statustype = 'Connect' and statusname = 'MFT'";
+                DataTable dt = MainObj.Dbutil.Runsql(sql);
+                string Driver = "PGSQL";
+                string ConnectionString = dt.Rows[0][0].ToString().Split("@")[1];
 
-            //Глубина списка из параметра
-            sql = "select color from t_sysstatus where statusname = 'ГлубинаСписка'";
-            dt = MainObj.Dbutil.Runsql(sql);
-            int id = (int)dt.Rows[0][0];
+                //Глубина списка из параметра
+                sql = "select color from t_sysstatus where statusname = 'ГлубинаСписка'";
+                dt = MainObj.Dbutil.Runsql(sql);
+                int id = 5000;
+                if (dt.Rows.Count > 0)
+                    id = (int)dt.Rows[0][0];
 
-            sql = "select dnload_history_insert(@id)";
-            dt = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@id", id}});
-            string version = dt.Rows[0][0].ToString();
-            sql = $"select card_number from blacklistshort order by card_number limit {id}";
-            if (blacktype == "delta")
-                sql = $"select card_number from blacklistdelta order by card_number limit {id}";
-            dt = MainObj.Dbutil.Runsql(sql, Driver, ConnectionString);
+                sql = "select dnload_history_insert(@id)";
+                dt = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@id", id } });
+                string version = dt.Rows[0][0].ToString();
+                sql = $"select card_number from blacklistshort order by card_number limit {id}";
+                if (blacktype == "delta")
+                    sql = $"select card_number from blacklistdelta order by card_number limit {id}";
+                dt = MainObj.Dbutil.Runsql(sql, Driver, ConnectionString);
 
-            List<string> res = new List<string>() { "[HEADER]" };
-            res.Add($"Дата={DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}");
-            res.Add(@"Поставщик=ГКУ ""Организатор перевозок""");
-            res.Add($"Версия={version}");
-            res.Add("");
-            res.Add("[BLACKLISTBSK]");
-            res.Add($"Data={id}");
-            for (int i = 0; i < dt.Rows.Count; i++)
-                res.Add($"{dt.Rows[i][0]}");
+                List<string> res = new List<string>() { "[HEADER]" };
+                res.Add($"Дата={DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}");
+                res.Add(@"Поставщик=ГКУ ""Организатор перевозок""");
+                res.Add($"Версия={version}");
+                res.Add("");
+                res.Add("[BLACKLISTBSK]");
+                res.Add($"Data={id}");
+                for (int i = 0; i < dt.Rows.Count; i++)
+                    res.Add($"{dt.Rows[i][0]}");
 
-            string strres = string.Join("\r\n", res);    
+                string strres = string.Join("\r\n", res);
 
-            byte[] buf = Encoding.GetEncoding("windows-1251").GetBytes(strres);
-            return File(buf, ctype, filename);
+                byte[] buf = Encoding.GetEncoding("windows-1251").GetBytes(strres);
+                return File(buf, ctype, filename);
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.Message);
+            }
         }
     }
 }
