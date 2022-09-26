@@ -32,7 +32,7 @@ namespace ServiceManager.Controllers
             }
         }
 
-        public ActionResult dnload(int id, string blacktype)
+        public ActionResult dnload(string blacktype)
         {
             string filename = $"BlackList.dat";
             string ctype = "application/octet-stream";
@@ -41,10 +41,15 @@ namespace ServiceManager.Controllers
             string Driver = "PGSQL";
             string ConnectionString = dt.Rows[0][0].ToString().Split("@")[1];
 
+            //Глубина списка из параметра
+            sql = "select color from t_sysstatus where statusname = 'ГлубинаСписка'";
+            dt = MainObj.Dbutil.Runsql(sql);
+            int id = (int)dt.Rows[0][0];
+
             sql = "select dnload_history_insert(@id)";
             dt = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>(){{"@id", id}});
             string version = dt.Rows[0][0].ToString();
-            sql = $"select card_number from blacklist order by card_number limit {id}";
+            sql = $"select card_number from blacklistshort order by card_number limit {id}";
             if (blacktype == "delta")
                 sql = $"select card_number from blacklistdelta order by card_number limit {id}";
             dt = MainObj.Dbutil.Runsql(sql, Driver, ConnectionString);
