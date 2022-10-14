@@ -32,6 +32,21 @@ namespace ServiceManager.Controllers
             }
         }
 
+        public ActionResult reports()
+        {
+            try
+            {
+                string sql = "select comment from t_sysstatus where statusname = 'reportsUrl'";
+                DataTable dt = MainObj.Dbutil.Runsql(sql);
+                string url = dt.Rows[0][0].ToString();
+                return Redirect(url);
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.Message);
+            }
+        }
+
         public ActionResult dnload(string blacktype)
         {
             try
