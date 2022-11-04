@@ -287,6 +287,8 @@ namespace ServiceManager.Controllers
             string s = F.ExportCSV(r);
             string ctype = "application/octet-stream";
             byte[] buf = Encoding.UTF8.GetBytes(s);
+            
+            //string filename = $"{F.Descr}.{format}"; //18.10.2022
             string filename = $"data_{id}.{format}";
             if (!string.IsNullOrEmpty(dateformat))
                 filename = pref + DateTime.Now.ToString(dateformat) + "." + format;
