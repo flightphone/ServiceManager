@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace ServiceManager.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ReactController : Controller
     {
         public JsonResult ClearColumn(string id)
@@ -304,9 +304,9 @@ namespace ServiceManager.Controllers
             {
                 try
                 {
-                    ExternalAdapter ea = new ExternalAdapter();
+                    //ExternalAdapter ea = new ExternalAdapter();
                     //ea.TestApi();
-                    ea.UpdateNciData(); //Во время отладки не обновляем
+                    //ea.UpdateNciData(); //Во время отладки не обновляем
                 }
                 catch
                 { }

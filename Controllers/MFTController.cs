@@ -23,7 +23,7 @@ namespace ServiceManager.Controllers
             try
             {
                 ExternalAdapter ea = new ExternalAdapter();
-                ea.TestApi();
+                //ea.TestApi();
                 return Json(new { Error = "OK" });
             }
             catch (Exception e)

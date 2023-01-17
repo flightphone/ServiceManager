@@ -99,7 +99,8 @@ namespace WpfBu.Models
 
         public void UpdateNciData()
         {
-            string apiuri = MainObj.api + "GetAllConnectorsInfo";
+            return;
+			string apiuri = MainObj.api + "GetAllConnectorsInfo";
             string nci = GetApi(apiuri);
             Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
             List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
@@ -269,7 +270,8 @@ namespace WpfBu.Models
         }
         public string GetApi(string apiuri)
         {
-            string res = "";
+            return "";
+			string res = "";
             HttpWebRequest request = HttpWebRequest.CreateHttp(apiuri);
             request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
