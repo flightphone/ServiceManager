@@ -10,25 +10,13 @@ using Microsoft.AspNetCore.Authorization;
 using Npgsql;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ServiceManager.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ReactController : Controller
     {
-        public JsonResult TestApi(string id)
-        {
-            try
-            {
-                ExternalAdapter ea = new ExternalAdapter();
-                ea.TestApi();
-                return Json(new { Error = "OK" });
-            }
-            catch (Exception e)
-            {
-                return Json(new { Error = $"Ошибка: {e.Message}" });
-            }
-        }
         public JsonResult ClearColumn(string id)
         {
             try
@@ -112,9 +100,12 @@ namespace ServiceManager.Controllers
             }
 
         }
-        public JsonResult exec(string EditProc, string SQLParams, string KeyF, string IdDeclare, string mode)
+        public JsonResult exec(string EditProc, string SQLParams, string KeyF, string IdDeclare, string mode, string OldValue)
         {
             Dictionary<string, object> WorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(SQLParams);
+            Dictionary<string, object> OldWorkRow = null;
+            if (!string.IsNullOrEmpty(OldValue))
+                OldWorkRow = JsonConvert.DeserializeObject<Dictionary<string, object>>(OldValue);
             string message = "OK";
             ExternalAdapter ea = new ExternalAdapter();
             if (ea.procedures.Contains(EditProc))
@@ -123,7 +114,7 @@ namespace ServiceManager.Controllers
                 try
                 {
 
-                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow, IdDeclare, mode);
+                    Dictionary<string, object> MainTab = ea.exec(EditProc, WorkRow, IdDeclare, mode, OldWorkRow);
                     List<string> ColumnTab = new List<string>();
                     ColumnTab.AddRange(MainTab.Keys);
                     return Json(new
@@ -222,7 +213,7 @@ namespace ServiceManager.Controllers
                 {
                     DateTime dval;
                     string val = F.SQLParams[k].ToString();
-                    if (DateTime.TryParse(val, out dval))
+                    if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
                     {
                         parseParam.Add(k, dval);
                     }
@@ -276,7 +267,7 @@ namespace ServiceManager.Controllers
                 {
                     DateTime dval;
                     string val = F.SQLParams[k].ToString();
-                    if (DateTime.TryParse(val, out dval))
+                    if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
                     {
                         parseParam.Add(k, dval);
                     }
@@ -296,6 +287,8 @@ namespace ServiceManager.Controllers
             string s = F.ExportCSV(r);
             string ctype = "application/octet-stream";
             byte[] buf = Encoding.UTF8.GetBytes(s);
+            
+            //string filename = $"{F.Descr}.{format}"; //18.10.2022
             string filename = $"data_{id}.{format}";
             if (!string.IsNullOrEmpty(dateformat))
                 filename = pref + DateTime.Now.ToString(dateformat) + "." + format;
@@ -304,10 +297,26 @@ namespace ServiceManager.Controllers
 
         }
 
+        private async void UpdateNCI()
+        {
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    //ExternalAdapter ea = new ExternalAdapter();
+                    //ea.TestApi();
+                    //ea.UpdateNciData(); //Во время отладки не обновляем
+                }
+                catch
+                { }
+                return;
+            });
+
+        }
+
         public JsonResult Banner()
         {
-            //try
-            //{
 
             string account = User.Identity.Name;
             if (string.IsNullOrEmpty(account))
@@ -319,21 +328,19 @@ namespace ServiceManager.Controllers
             try
             {
                 //mtf banner
-                ExternalAdapter ea = new ExternalAdapter();
+
                 string message = "OK";
                 bool adm = false;
                 try
                 {
-                    ea.TestApi();
-                    ea.UpdateNciData(); //Во время отладки не обновляем
+                    UpdateNCI(); 
                     adm = MainObj.CheckAccess("Administrators", account);
                 }
                 catch (Exception e)
                 {
                     message = e.Message;
                 }
-                //common banner
-                var sql = "select a.* from fn_mainmenu('ALL', @Account) a where link1 = 'Bureau.Finder' and params not in ('75', '129') order by a.ordmenu, idmenu";
+                var sql = "select a.* from fn_mainmenu('ALL', @Account) a where ordmenu < 1000000  order by ordmenu limit 8";
                 DataTable data = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@Account", account } });
                 n = Math.Min(8, data.Rows.Count);
                 for (int i = 0; i < n; i++)
@@ -341,16 +348,18 @@ namespace ServiceManager.Controllers
                     Dictionary<string, string> r = new Dictionary<string, string>() {
                             {"id", data.Rows[i]["idmenu"].ToString()},
                             {"iddeclare", data.Rows[i]["params"].ToString()},
-                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()}
+                            {"text", data.Rows[i]["caption"].ToString().Split("/").Last()},
+                            {"link1", data.Rows[i]["link1"].ToString()}
                         };
                     res.Add(r);
                 }
-                
-                for (int i = n; i < 8; i++)
-                {
-                    Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
-                    res.Add(r);
-                }
+
+                if (n > 0)
+                    for (int i = n; i < 8; i++)
+                    {
+                        Dictionary<string, string> r = new Dictionary<string, string>(res[i - n]);
+                        res.Add(r);
+                    }
                 return Json(new { items = res.Take(4).ToList(), items2 = res.Skip(4).ToList(), Error = message, Admin = adm });
             }
             catch (Exception e)

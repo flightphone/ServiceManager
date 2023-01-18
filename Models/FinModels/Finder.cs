@@ -142,7 +142,7 @@ namespace WpfBu.Models
 
         public bool AutoCreateColumns = true;
         public List<FinderField> Fcols { get; set; }
-		public List<FinderField> SearchCols { get; set; }
+        public List<FinderField> SearchCols { get; set; }
         public Dictionary<string, string> TextParams { get; set; }
 
         public Dictionary<string, object> SQLParams { get; set; }
@@ -176,14 +176,14 @@ namespace WpfBu.Models
 
         public string IdDeclareSet { get; set; }
         public Finder Setting { get; set; }
-		//01/08/2022 поле ссылки на прикрепленные файлы
-		public string AddKeys {get; set;}
+        //01/08/2022 поле ссылки на прикрепленные файлы
+        public string AddKeys { get; set; }
         public override void start(object o)
         {
 
             IdDeclare = o.ToString();
-            string sql= "select * from v_t_rpdeclare where iddeclare = @iddeclare";
-            DataTable t_rp = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>{{"@iddeclare", int.Parse(o.ToString())}});
+            string sql = "select * from v_t_rpdeclare where iddeclare = @iddeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(sql, new Dictionary<string, object> { { "@iddeclare", int.Parse(o.ToString()) } });
             DataRow rd = t_rp.Rows[0];
             string paramvalue = rd["paramvalue"].ToString();
             if (string.IsNullOrEmpty(SQLText))
@@ -202,7 +202,7 @@ namespace WpfBu.Models
             }
 
             external = (SQLText.IndexOf("__external__") > -1);
-            
+
             DecName = rd["decname"].ToString();
             Descr = rd["descr"].ToString();
             text = Descr;
@@ -219,12 +219,12 @@ namespace WpfBu.Models
             KeyF = rd["keyfield"].ToString();
             DispField = rd["dispfield"].ToString();
             //19.07.2022
-            
+
             if (string.IsNullOrEmpty(DispField))
                 DispField = tag;
-			//28.07.2022
-			SearchCols = new List<FinderField>() { 
-			new FinderField()
+            //28.07.2022
+            SearchCols = new List<FinderField>() {
+            new FinderField()
             {
                 FieldName = DispField,
                 FieldCaption = "*",
@@ -240,9 +240,9 @@ namespace WpfBu.Models
 
             //параметры 17.09.2020
             IdDeclareSet = rd["dispparamname"].ToString();
-			
-			//Файлы 01.02.2022
-			AddKeys = rd["addkeys"].ToString();
+
+            //Файлы 01.02.2022
+            AddKeys = rd["addkeys"].ToString();
             //04.06.2021
             if ((int)rd["dectype"] > 30)
                 nrows = (int)rd["dectype"];
@@ -288,7 +288,7 @@ namespace WpfBu.Models
         #region startinit
         public virtual void CreateEditor()
         {
-            if (!string.IsNullOrEmpty(EditProc) && !OKFun)
+            if (!string.IsNullOrEmpty(EditProc) && !OKFun && Fcols != null)
             {
                 ReferEdit = new Editor();
                 ReferEdit.start(this);
@@ -365,9 +365,8 @@ namespace WpfBu.Models
                 });
             }
 
-
             //доп. колонка для поиска по всем колонкам
-			/*
+            /*
             Fcols.Add(new FinderField()
             {
                 FieldName = tag,
@@ -449,7 +448,7 @@ namespace WpfBu.Models
             if (!string.IsNullOrEmpty(OrdField))
                 decSQL = decSQL + " order by " + OrdField;
             sql = decSQL;
-            var data = MainObj.Dbutil.Runsql(sql, SQLParams);
+            var data = MainObj.Dbutil.Runsql(sql, SQLParams, Driver, ConnectionString);
 
             return data;
         }
@@ -500,6 +499,19 @@ namespace WpfBu.Models
             }
             return idata;
         }
+
+        public void setDefault()
+        {
+            if (ColumnTab == null || ColumnTab.Count == 0)
+                return;
+            //Создаем список полей для сохранения 17.08.2022
+            if (string.IsNullOrEmpty(SaveFieldList))
+                SaveFieldList = string.Join(",", ColumnTab);
+            if (string.IsNullOrEmpty(KeyF))
+            {
+                KeyF = ColumnTab.First();
+            }
+        }
         public virtual void UpdateTabExternal()
         {
             //внешний источник данных 20.07.2022
@@ -518,6 +530,8 @@ namespace WpfBu.Models
                 ColumnTab = new List<string>();
                 ColumnTab.AddRange(Fcols.Select(f => f.FieldName));
             }
+
+            setDefault();
 
             IEnumerable<Dictionary<string, object>> idata = (IEnumerable<Dictionary<string, object>>)data;
             idata = FilterExternal(idata);
@@ -644,8 +658,8 @@ namespace WpfBu.Models
             }
 
 
-            
-            if (Driver!="MSSQL")
+
+            if (Driver != "MSSQL")
                 sql = sql + " limit " + nrows.ToString() + " offset " + ((page - 1) * nrows).ToString();
             else
             {
@@ -673,6 +687,8 @@ namespace WpfBu.Models
             //если колонки не указаны, создаем автоматически
             if (Fcols == null && MainTab.Count > 0)
                 CreateColumns(MainTab[0]);
+
+            setDefault();
         }
         #endregion
         public void CompilerFilterOrder()
@@ -684,19 +700,19 @@ namespace WpfBu.Models
             var fls = Fcols.Where(f => f.FieldName != tag).Where(f => !string.IsNullOrEmpty(f.FindString)).Select(f =>
             {
                 string s = "";
-                if (Driver=="PGSQL")
+                if (Driver == "PGSQL")
                 {
-                if (f.FindString[0] == '!')
-                    s = " (not " + f.FieldName + " ilike '%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
-                else
-                    s = " (" + f.FieldName + " ilike '%" + f.FindString.Replace("'", "''") + "%') ";
+                    if (f.FindString[0] == '!')
+                        s = " (not " + f.FieldName + " ilike '%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
+                    else
+                        s = " (" + f.FieldName + " ilike '%" + f.FindString.Replace("'", "''") + "%') ";
                 }
                 else
                 {
                     if (f.FindString[0] == '!')
-                    s = " (not " + f.FieldName + " like N'%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
-                else
-                    s = " (" + f.FieldName + " like N'%" + f.FindString.Replace("'", "''") + "%') ";
+                        s = " (not " + f.FieldName + " like N'%" + f.FindString.Substring(1).Replace("'", "''") + "%') ";
+                    else
+                        s = " (" + f.FieldName + " like N'%" + f.FindString.Replace("'", "''") + "%') ";
                 }
                 return s;
             });

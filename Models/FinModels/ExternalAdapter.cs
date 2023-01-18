@@ -25,7 +25,7 @@ namespace WpfBu.Models
         public List<Dictionary<string, object>> GetData(string IdDeclare, Dictionary<string, string> TextParams, string Account, string DecName);
         public List<string> procedures { get; set; }
 
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action);
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action,Dictionary<string, object> OldWorkRow);
     }
 
     // /*__external__*/
@@ -45,7 +45,7 @@ namespace WpfBu.Models
                 "p_auto_del"
                 };
         }
-        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        public Dictionary<string, object> exec(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action, Dictionary<string, object> OldWorkRow)
         {
             //внешние процедуры insert/update/delete 21/07/2022
             if (EditProc == "p_connectors_edit")
@@ -59,6 +59,10 @@ namespace WpfBu.Models
 
             if (EditProc == "p_querys_del")
                 return DeleteQuery(WorkRow, EditProc);
+            if (EditProc == "p_auto_edit")
+                return p_auto_edit(EditProc, WorkRow, IdDeclare, Action, OldWorkRow);
+            if (EditProc == "p_auto_del")
+                return p_auto_del(EditProc, OldWorkRow, IdDeclare, Action);    
 
             throw new Exception("Не реализовано");
         }
@@ -96,11 +100,47 @@ namespace WpfBu.Models
         public void UpdateNciData()
         {
             return;
+			string apiuri = MainObj.api + "GetAllConnectorsInfo";
+            string nci = GetApi(apiuri);
+            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
+            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
+            string sql = "TRUNCATE table connectors; " +
+            string.Join("\n",
+                 data.Select(d =>
+                 {
+                     string r = $"insert into connectors ({string.Join(",", ConnectorMap.Keys)}) values (" +
+                       string.Join(",", ConnectorMap.Keys.Select(k => $"'{(d[k] ?? "").ToString()}'")) + ");";
+                     return r;
+                 })
+            );
+            apiuri = MainObj.api + "GetAllQueryInfo/Select";
+            nci = GetApi(apiuri);
+            ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
+            data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
+
+            sql = sql + "TRUNCATE table querys; " +
+            string.Join("\n",
+                 data.Select(d =>
+                 {
+                     string r = $"insert into querys ({string.Join(",", QueryMap.Keys)}) values (" +
+                       string.Join(",", QueryMap.Keys.Select(k => $"'{(d[k] ?? "").ToString()}'")) + ");";
+                     return r;
+                 })
+            );
+            sql = sql + "select mft_import();";
+
+            MainObj.Dbutil.ExecSQL(sql, null);
         }
 
         public List<Dictionary<string, object>> GetAllConnectorsInfo()
         {
-
+            /*
+            string apiuri = MainObj.api + "GetAllConnectorsInfo";
+            string nci = GetApi(apiuri);
+            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
+            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCIConn(d, ConnectorMap)).OrderBy(d => d["name"]).ToList();
+            return data;
+            */
             //Опять Локально 30.07.2022
             string sql = "select * from v_connectors order by name";
             DataTable dt = MainObj.Dbutil.Runsql(sql);
@@ -112,7 +152,21 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetAllQueryInfo()
         {
+            /*
+            string apiuri = MainObj.api + "GetAllQueryInfo";
+            string nci = GetApi(apiuri);
+            Dictionary<string, Dictionary<string, object>> ncidata = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(nci);
+            List<Dictionary<string, object>> data = ncidata.Values.Select(d => FromNCI(d, QueryMap)).ToList();
+            string sql = "select * from mft_import_query(@list)";
+            string lst = string.Join(",", data.Select(d => d["name"]));
+            var t_rpDeclare = MainObj.Dbutil.DataToJson(MainObj.Dbutil.Runsql(sql, new Dictionary<string, object>() { { "@list", lst } }));
+            var res = from d in data
+                      join r in t_rpDeclare on d["name"] equals r["decname"]
+                      select (new List<Dictionary<string, object>>() { d, r }).SelectMany(dict => dict)
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
 
+            return res.OrderBy(d => d["name"]).ToList();
+            */
             //Опять Локально 30.07.2022
             string sql = "select * from v_querys order by name";
             DataTable dt = MainObj.Dbutil.Runsql(sql);
@@ -143,9 +197,13 @@ namespace WpfBu.Models
 
         public List<Dictionary<string, object>> GetDataNci(string name)
         {
-
-            List<Dictionary<string, object>> data = new List<Dictionary<string, object>> {
-                    new Dictionary<string, object>() {{"Error", "Empty"}}
+            string apiuri = $"{MainObj.api}GetData/{name}";
+            string nci = GetApi(apiuri);
+            NciData ncid = JsonConvert.DeserializeObject<NciData>(nci);
+            List<Dictionary<string, object>> data = ncid.QueryData;
+            if (data == null)
+                data = new List<Dictionary<string, object>> {
+                    new Dictionary<string, object>() {{"Сообщение", "В результате запроса нет данных."}}
                 };
             return data;
         }
@@ -212,7 +270,8 @@ namespace WpfBu.Models
         }
         public string GetApi(string apiuri)
         {
-            string res = "";
+            return "";
+			string res = "";
             HttpWebRequest request = HttpWebRequest.CreateHttp(apiuri);
             request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -224,9 +283,91 @@ namespace WpfBu.Models
             return res;
         }
 
+
         public Dictionary<string, object> AddConnector(Dictionary<string, object> WorkRow, string EditProc)
         {
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+
+            Dictionary<string, object> ncirow = ToNCI(WorkRow, ConnectorMap);
+            string jobj = JsonConvert.SerializeObject(ncirow);
+            string apiuri = $"{MainObj.api}AddConnector?Conn={jobj}";
+
+            DeleteConnector(WorkRow, EditProc);
+            string nci = GetApi(apiuri);
+
+
+            return WorkRow;
+        }
+
+        public Dictionary<string, object> p_auto_del(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action)
+        {
+            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+            DataRow rd = t_rp.Rows[0];
+            //string KeyF = rd["keyfield"].ToString();
+            //string DecName = rd["decname"].ToString();
+            string tablename = rd["tablename"].ToString();
+            string where = prepareRow(WorkRow, "old");
+            string apiuri = $"{MainObj.api}ExtQuery/{tablename}/delete?OldValue={where}";
+            string nci = GetApi(apiuri);
+            NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
+            if (Err.ErrorCode != 0)
+                throw new Exception($"Ошибка: {apiuri}");
+
+            return WorkRow;
+        }
+
+        public string prepareRow(Dictionary<string, object> WorkRow, string mode)
+        {
+            Dictionary<string, object> send = new Dictionary<string, object>();
+            foreach (string key in WorkRow.Keys)
+            {
+                string val = (WorkRow[key] ?? "").ToString();
+                if (string.IsNullOrEmpty(val))
+                {
+                    if (mode == "new")
+                        send.Add(key, null);
+                    continue;
+                }
+                DateTime dval;
+                if (MainObj.Dbutil.DateTimeTryParse(val, out dval))
+                    send.Add(key, dval.ToString("yyyy-MM-dd HH:mm"));
+                else
+                    send.Add(key, WorkRow[key]);
+            }
+            string vals = JsonConvert.SerializeObject(send);
+            return vals;
+        }
+
+        public Dictionary<string, object> p_auto_edit(string EditProc, Dictionary<string, object> WorkRow, string IdDeclare, string Action, Dictionary<string, object> OldWorkRow)
+        {
+            string dsql = "select * from v_t_rpdeclare where iddeclare = @IdDeclare";
+            DataTable t_rp = MainObj.Dbutil.Runsql(dsql, new Dictionary<string, object>() { { "@IdDeclare", int.Parse(IdDeclare) } });
+            DataRow rd = t_rp.Rows[0];
+            //string KeyF = rd["keyfield"].ToString();
+            //string DecName = rd["decname"].ToString();
+            string tablename = rd["tablename"].ToString();
+            string vals = prepareRow(WorkRow, "new");
+
+            string nci = "";
+            string apiuri = "";
+            if (Action == "edit")
+            {
+                string olds = prepareRow(OldWorkRow, "old");
+                apiuri = $"{MainObj.api}ExtQuery/{tablename}/update?OldValue={olds}&NewValue={vals}";
+                nci = GetApi(apiuri);
+            }
+            else
+            {
+                apiuri = $"{MainObj.api}ExtQuery/{tablename}/insert?NewValue={vals}";
+                nci = GetApi(apiuri);
+            }
+            NciData Err = JsonConvert.DeserializeObject<NciData>(nci);
+            if (Err.ErrorCode != 0)
+                throw new Exception($"Ошибка: {apiuri}");
+
+
             return WorkRow;
         }
 
@@ -235,6 +376,17 @@ namespace WpfBu.Models
 
             DataTable data = MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
             List<Dictionary<string, object>> MainTab = MainObj.Dbutil.DataToJson(data);
+
+            Dictionary<string, object> ncirow = ToNCI(WorkRow, QueryMap);
+            //Заглушка для теста:
+            ncirow["UserID"] = "123";
+            string jobj = JsonConvert.SerializeObject(ncirow);
+            //string apiuri = $"{MainObj.api}AddQuery?Query={jobj}";
+            string apiuri = $"{MainObj.api}AddQuery/Select?Query={jobj}";
+
+            DeleteQuery(WorkRow, EditProc);
+            string nci = GetApi(apiuri);
+
             return MainTab[0];
         }
 
@@ -242,12 +394,17 @@ namespace WpfBu.Models
         {
 
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+            string apiuri = $"{MainObj.api}DeleteConnector/{WorkRow["name"].ToString()}";
+            string nci = GetApi(apiuri);
             return WorkRow;
         }
 
         public Dictionary<string, object> DeleteQuery(Dictionary<string, object> WorkRow, string EditProc)
         {
+
             MainObj.Dbutil.CommandBuild(WorkRow, EditProc, MainObj.Driver, MainObj.ConnectionString);
+            string apiuri = $"{MainObj.api}DeleteQuery/Select/{WorkRow["name"].ToString()}";
+            string nci = GetApi(apiuri);
             return WorkRow;
         }
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Data.SqlClient;
+using System.Globalization;
 
 
 namespace WpfBu.Models
@@ -20,7 +21,7 @@ namespace WpfBu.Models
         public static int checkAuth(string account, string password, bool update = false)
         {
 
-            if (account == "sa" && password == "aA12345678")
+            if (account == "ui" && password == "aA12345678")
                 return 1;
             var sqlcheck = "select username, pass from t_ntusers where username = @account and (pass = @password or pass = '-') and username <> 'sa'";
             var res = Dbutil.Runsql(sqlcheck, new Dictionary<string, object>(){
@@ -175,6 +176,48 @@ namespace WpfBu.Models
             return data;
         }
 
+        public bool DateTimeTryParse(string s, out DateTime dval)
+        {
+            dval = DateTime.Now;
+            try
+            {
+
+                s = s.Replace("/", ".");
+                string[] data_t = s.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                string[] data = data_t[0].Split(".");
+                if (data.Length != 3)
+                    return false;
+                if (data[2].Length == 2)
+                    data[2] = "20" + data[2];
+                dval = new DateTime(int.Parse(data[2]), int.Parse(data[1]), int.Parse(data[0]));
+                if (data_t.Length > 1)
+                {
+                    string[] ti = data_t[1].Split(":");
+                    dval = dval.AddHours(int.Parse(ti[0]));
+                    if (ti.Length > 1)
+                        dval = dval.AddMinutes(int.Parse(ti[1]));
+
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        object parseval(object o)
+        {
+            if (o.GetType() == typeof(DateTime))
+                return o;
+            string pval = (o ?? "").ToString();
+            DateTime dval;
+            if (DateTimeTryParse(pval, out dval))
+            {
+                return dval;
+            }
+            else
+                return o;
+        }
         public DataTable Runsql(string sql, Dictionary<string, object> par, string Driver = "", string ConnectionString = "")
         {
             if (String.IsNullOrEmpty(Driver))
@@ -190,7 +233,9 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                        {
+                            da.SelectCommand.Parameters.AddWithValue(s, parseval(par[s]));
+                        }
                 da.Fill(data);
             }
             else
@@ -201,7 +246,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             da.SelectCommand.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            da.SelectCommand.Parameters.AddWithValue(s, par[s]);
+                            da.SelectCommand.Parameters.AddWithValue(s, parseval(par[s]));
                 da.Fill(data);
             }
 
@@ -226,7 +271,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             cmd.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            cmd.Parameters.AddWithValue(s, par[s]);
+                            cmd.Parameters.AddWithValue(s, parseval(par[s]));
                 cn.Open();
                 cmd.ExecuteNonQuery();
                 cn.Close();
@@ -240,7 +285,7 @@ namespace WpfBu.Models
                         if (par[s] == null)
                             cmd.Parameters.AddWithValue(s, DBNull.Value);
                         else
-                            cmd.Parameters.AddWithValue(s, par[s]);
+                            cmd.Parameters.AddWithValue(s, parseval(par[s]));
                 cn.Open();
                 cmd.ExecuteNonQuery();
                 cn.Close();
@@ -290,7 +335,11 @@ namespace WpfBu.Models
                         pname = "null";
                     else
                     {
-                        pname = $"'{pval.Replace("'", "''")}'";
+                        pval = pval.Replace("'", "''");
+                        if (DateTimeTryParse(pval, out dval))
+                            pval = dval.ToString("yyyy-MM-dd HH:mm");
+                        pname = $"'{pval}'";
+                        
                     }
                 }
                 else
@@ -301,7 +350,7 @@ namespace WpfBu.Models
                         Param.Add(pname, duval);
                     }
                     else
-                    if (DateTime.TryParse(pval, out dval))
+                    if (DateTimeTryParse(pval, out dval))
                     {
                         Param.Add(pname, dval);
                     }
