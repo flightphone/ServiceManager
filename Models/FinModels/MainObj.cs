@@ -21,7 +21,7 @@ namespace WpfBu.Models
         public static int checkAuth(string account, string password, bool update = false)
         {
 
-            if (account == "ui" && password == "aA12345678")
+            if (account == "sa" && password == "aA12345678")
                 return 1;
             var sqlcheck = "select username, pass from t_ntusers where username = @account and (pass = @password or pass = '-') and username <> 'sa'";
             var res = Dbutil.Runsql(sqlcheck, new Dictionary<string, object>(){
